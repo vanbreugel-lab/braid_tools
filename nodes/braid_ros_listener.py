@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """# This script listens to the HTTP JSON Event Stream of Strand Braid.
 
 Writes /flydra_mainbrain_super_packets.
@@ -13,17 +13,12 @@ import json
 import time
 import socket
 
-import roslib
-roslib.load_manifest('geometry_msgs')
-roslib.load_manifest('std_msgs')
-from geometry_msgs.msg import Pose, Quaternion
-from std_msgs.msg import UInt32, Float32
-roslib.load_manifest('ros_flydra')
 from ros_flydra.msg import flydra_mainbrain_super_packet, flydra_mainbrain_packet, flydra_object
 
 import rospy
 
 DATA_PREFIX = 'data: '
+
 
 class BraidProxy:
     def __init__(self, braid_model_server_url):
@@ -37,26 +32,31 @@ class BraidProxy:
             except requests.exceptions.ConnectionError as err:
                 if count > 20:
                     raise err
-                rospy.loginfo('Sleeping because we failed to connect to server at %s'%self.braid_model_server_url)
+                rospy.loginfo('Sleeping because we failed to connect to server at %s' % self.braid_model_server_url)
                 time.sleep(1.0)
                 count += 1
-        assert(r.status_code == requests.codes.ok)
+        assert (r.status_code == requests.codes.ok)
 
         self.pub = rospy.Publisher('flydra_mainbrain/super_packets',
-            flydra_mainbrain_super_packet, queue_size=100)
+                                   flydra_mainbrain_super_packet, queue_size=100)
+
+        print(self.braid_model_server_url)
 
     def run(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         events_url = self.braid_model_server_url + 'events'
         r = self.session.get(events_url,
-            stream=True,
-            headers={'Accept': 'text/event-stream'},
-            )
+                             stream=True,
+                             headers={'Accept': 'text/event-stream'},
+                             )
+
+        print('here1')
         for chunk in r.iter_content(chunk_size=None, decode_unicode=True):
+            print('here2')
             data = parse_chunk(chunk)
             # print('chunk value: %r'%data)
-            version = data.get('v',1) # default because missing in first release
-            assert version in (1,2) # check the data version
+            version = data.get('v', 1)  # default because missing in first release
+            assert version in (1, 2)  # check the data version
 
             try:
                 msg_dict = data['msg']
@@ -77,7 +77,7 @@ class BraidProxy:
             obj.velocity.x = update_dict['xvel']
             obj.velocity.y = update_dict['yvel']
             obj.velocity.z = update_dict['zvel']
-            obj.posvel_covariance_diagonal = [update_dict['P%d%d'%(i,i)] for i in range(6)]
+            obj.posvel_covariance_diagonal = [update_dict['P%d%d' % (i, i)] for i in range(6)]
             objects.append(obj)
 
             packet.framenumber = update_dict['frame']
@@ -93,19 +93,21 @@ class BraidProxy:
 
             self.pub.publish(msg)
 
+
 def parse_chunk(chunk):
     lines = chunk.strip().split('\n')
-    assert(len(lines)==2)
-    assert(lines[0]=='event: braid')
-    assert(lines[1].startswith(DATA_PREFIX))
+    assert (len(lines) == 2)
+    assert (lines[0] == 'event: braid')
+    assert (lines[1].startswith(DATA_PREFIX))
     buf = lines[1][len(DATA_PREFIX):]
     data = json.loads(buf)
     return data
 
+
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--braid-model-server-url", default='http://127.0.0.1:8397/',
+    parser.add_argument("--braid-model-server-url", default='http://127.0.0.1:33333/',
                         help="URL of Braid model server")
 
     argv = rospy.myargv()
@@ -114,5 +116,7 @@ def main():
     rospy.init_node('braid_ros_listener', disable_signals=True)
     BraidProxy(args.braid_model_server_url).run()
 
+
 if __name__ == '__main__':
+    print('Start')
     main()
