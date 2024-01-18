@@ -13,7 +13,8 @@ import json
 import time
 import socket
 
-from ros_flydra.msg import flydra_mainbrain_super_packet, flydra_mainbrain_packet, flydra_object
+# from ros_flydra.msg import flydra_mainbrain_super_packet, flydra_mainbrain_packet, flydra_object
+from braid_tools.msg import flydra_mainbrain_super_packet, flydra_mainbrain_packet, flydra_object
 
 import rospy
 

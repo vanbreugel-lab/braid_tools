@@ -6,7 +6,9 @@ import roslib
 import numpy as np
 import rospy
 from std_msgs.msg import Float32, Float32MultiArray
-from ros_flydra.msg import *
+# from ros_flydra.msg import *
+from braid_tools.msg import flydra_mainbrain_super_packet, flydra_mainbrain_packet, flydra_object
+
 import time
 
 fig = plt.figure()

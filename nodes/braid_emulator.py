@@ -18,7 +18,8 @@ roslib.load_manifest('std_msgs')
 from geometry_msgs.msg import Pose, Quaternion
 from std_msgs.msg import UInt32, Float32
 roslib.load_manifest('ros_flydra')
-from ros_flydra.msg import flydra_mainbrain_super_packet, flydra_mainbrain_packet, flydra_object
+# from ros_flydra.msg import flydra_mainbrain_super_packet, flydra_mainbrain_packet, flydra_object
+from braid_tools.msg import flydra_mainbrain_super_packet, flydra_mainbrain_packet, flydra_object
 
 import rospy
 
