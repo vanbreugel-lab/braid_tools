@@ -50,11 +50,8 @@ class BraidProxy:
                              headers={'Accept': 'text/event-stream'},
                              )
 
-        print('here1')
         for chunk in r.iter_content(chunk_size=None, decode_unicode=True):
-            print('here2')
             data = parse_chunk(chunk)
-            # print('chunk value: %r'%data)
             version = data.get('v', 1)  # default because missing in first release
             assert version in (1, 2)  # check the data version
 
@@ -107,7 +104,7 @@ def parse_chunk(chunk):
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--braid-model-server-url", default='http://127.0.0.1:33333/',
+    parser.add_argument("--braid-model-server-url", default='http://127.0.0.1:8397/',
                         help="URL of Braid model server")
 
     argv = rospy.myargv()
