@@ -76,8 +76,8 @@ ani = animate.FuncAnimation(fig, animate_, fargs=(x_vec, y_vec, z_vec), interval
 if __name__ == "__main__":
     braid_sub()
     parser = OptionParser()
-    parser.add_option("--config", type="str", dest="config", default='',
-                      help="Full path that points to a config.yaml file')
-                      (options, args) = parser.parse_args()
+    (parser.add_option("--config", type="str", dest="config", default='',
+                      help="Full path that points to a config.yaml file")
+     (options, args)) = parser.parse_args()
 
 
