@@ -69,7 +69,7 @@ def animate_(i, x_vec, y_vec, z_vec):
     ax.set_xlim(xmin, xmax)
     ax.set_zlim(zmin, zmax)
     ax.scatter(x_vec, y_vec, z_vec)
-
+#test
 
 ani = animate.FuncAnimation(fig, animate_, fargs=(x_vec, y_vec, z_vec), interval=10)
 # plt.show()
