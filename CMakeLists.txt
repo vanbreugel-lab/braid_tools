@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 2.8.3)
 project(braid_tools)
 
 find_package(catkin REQUIRED COMPONENTS
-    ros_flydra
     roscpp
     rospy
     std_msgs
@@ -11,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
     sensor_msgs
     geometry_msgs
     dynamic_reconfigure
+    message_generation
 )
 
 find_package(
@@ -23,14 +23,21 @@ find_package(
     dynamic_reconfigure
 )
 
-#generate_messages(
-#  DEPENDENCIES std_msgs geometry_msgs
-#)
+add_message_files(
+  FILES
+  flydra_mainbrain_packet.msg
+  flydra_mainbrain_super_packet.msg
+  flydra_object.msg
+)
+
+generate_messages(
+  DEPENDENCIES std_msgs geometry_msgs
+)
 
 catkin_package( ## if you dont add this, executables are not found
   INCLUDE_DIRS nodes
 #  LIBRARIES pcl_tutorials
-  CATKIN_DEPENDS geometry_msgs nav_msgs pcl_msgs roscpp rospy std_msgs ros_flydra
+  CATKIN_DEPENDS geometry_msgs nav_msgs pcl_msgs roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
 

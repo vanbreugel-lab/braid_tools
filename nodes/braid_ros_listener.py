@@ -13,7 +13,8 @@ import json
 import time
 import socket
 
-from ros_flydra.msg import flydra_mainbrain_super_packet, flydra_mainbrain_packet, flydra_object
+# from ros_flydra.msg import flydra_mainbrain_super_packet, flydra_mainbrain_packet, flydra_object
+from braid_tools.msg import flydra_mainbrain_super_packet, flydra_mainbrain_packet, flydra_object
 
 import rospy
 
@@ -51,9 +52,7 @@ class BraidProxy:
                              )
 
         for chunk in r.iter_content(chunk_size=None, decode_unicode=True):
-            print('here2')
             data = parse_chunk(chunk)
-            # print('chunk value: %r'%data)
             version = data.get('v', 1)  # default because missing in first release
             assert version in (1, 2)  # check the data version
 
@@ -106,7 +105,8 @@ def parse_chunk(chunk):
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--braid-model-server-url", default='http://0.0.0.0:8397/',
+    #parser.add_argument("--braid-model-server-url", default='http://0.0.0.0:8397/',
+    parser.add_argument("--braid-model-server-url", default='http://127.0.0.1:8397/',
                         help="URL of Braid model server")
 
     argv = rospy.myargv()
