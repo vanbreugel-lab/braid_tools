@@ -28,6 +28,7 @@ class BraidProxy:
         while True:
             try:
                 r = self.session.get(self.braid_model_server_url)
+                rospy.loginfo('Connected to %s' % self.braid_model_server_url)
                 break
             except requests.exceptions.ConnectionError as err:
                 if count > 20:
@@ -40,7 +41,6 @@ class BraidProxy:
         self.pub = rospy.Publisher('flydra_mainbrain/super_packets',
                                    flydra_mainbrain_super_packet, queue_size=100)
 
-        print(self.braid_model_server_url)
 
     def run(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -50,7 +50,6 @@ class BraidProxy:
                              headers={'Accept': 'text/event-stream'},
                              )
 
-        print('here1')
         for chunk in r.iter_content(chunk_size=None, decode_unicode=True):
             print('here2')
             data = parse_chunk(chunk)
@@ -107,7 +106,7 @@ def parse_chunk(chunk):
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--braid-model-server-url", default='http://127.0.0.1:33333/',
+    parser.add_argument("--braid-model-server-url", default='http://0.0.0.0:8397/',
                         help="URL of Braid model server")
 
     argv = rospy.myargv()
@@ -118,5 +117,4 @@ def main():
 
 
 if __name__ == '__main__':
-    print('Start')
     main()
