@@ -8,21 +8,29 @@ import time
 import threading
 
 import numpy as np
-from multi_tracker.msg import Trackedobject, Trackedobjectlist
+from braid_tools.msg import flydra_mainbrain_super_packet, flydra_mainbrain_packet, flydra_object
 
 import h5py
 
 import atexit
 
 class DataListener:
-    def __init__(self, info='data information', record_time_hrs=24):
-        self.subTrackedObjects = rospy.Subscriber('/flydra_mainbrain/super_packets, queue_size=500)
+    def __init__(self, info='data', record_time_hrs=24, home_directory=''):
+        self.subTrackedObjects = rospy.Subscriber('/flydra_mainbrain/super_packets', 
+            flydra_mainbrain_super_packet, self.tracked_object_callback, queue_size=500)
         
-	experiment_basename = time.strftime("%Y%m%d_%H%M%S_", time.localtime())
+        experiment_basename = time.strftime("%Y%m%d_%H%M%S", time.localtime())
            
         filename = experiment_basename + '_braid_objects.hdf5'
-        home_directory = os.path.expanduser( rospy.get_param('/braid/data_directory') )
-        
+
+        if home_directory == '':
+            try:
+                home_directory = os.path.expanduser( rospy.get_param('/braid/data_directory') )
+            except:
+                home_directory = os.path.expanduser('~/Desktop/temp')   
+        else:
+            home_directory = os.path.expanduser(home_directory)
+
         filename = os.path.join(home_directory, filename)
         
         print('Saving hdf5 data to: ', filename)
@@ -42,17 +50,17 @@ class DataListener:
         self.hdf5.attrs.create("info", info)
         
         self.data_to_save = [   'frame_number', 
-                                'reconstruction_stamp.secs',
-                                'reconstruction_stamp.nsecs',
-                                'aquire_stamp.secs',
-                                'aquire_stamp.nsecs', 
-                                'objid',
-                                'position.x', 
-                                'position.y', 
-                                'position.z', 
-                                'velocity.x',
-                                'velocity.y',
-                                'velocity.z',
+                                'reconstruction_stamp_secs',
+                                'reconstruction_stamp_nsecs',
+                                'acquire_stamp_secs',
+                                'acquire_stamp_nsecs', 
+                                'obj_id',
+                                'position_x', 
+                                'position_y', 
+                                'position_z', 
+                                'velocity_x',
+                                'velocity_y',
+                                'velocity_z',
                                 'posvel_covariance_d1',
                                 'posvel_covariance_d2',
                                 'posvel_covariance_d3',
@@ -62,17 +70,17 @@ class DataListener:
                                 ]
                                 
         self.data_format = {    'frame_number': int, 
-                                'reconstruction_stamp.secs': int,
-                                'reconstruction_stamp.nsecs': int,
-                                'aquire_stamp.secs': int,
-                                'aquire_stamp.nsecs': int, 
-                                'objid': int,
-                                'position.x': float, 
-                                'position.y': float, 
-                                'position.z': float, 
-                                'velocity.x': float,
-                                'velocity.y': float,
-                                'velocity.z': float,
+                                'reconstruction_stamp_secs': int,
+                                'reconstruction_stamp_nsecs': int,
+                                'acquire_stamp_secs': int,
+                                'acquire_stamp_nsecs': int, 
+                                'obj_id': int,
+                                'position_x': float, 
+                                'position_y': float, 
+                                'position_z': float, 
+                                'velocity_x': float,
+                                'velocity_y': float,
+                                'velocity_z': float,
                                 'posvel_covariance_d1': float,
                                 'posvel_covariance_d2': float,
                                 'posvel_covariance_d3': float,
@@ -110,13 +118,13 @@ class DataListener:
     def tracked_object_callback(self, super_packet):
         with self.lockBuffer:
             for packet in super_packet.packets:
-            	for obj in packet.objects:
+                for obj in packet.objects:
                     a = np.array([( packet.framenumber,
                                     packet.reconstruction_stamp.secs,
                                     packet.reconstruction_stamp.nsecs,
-                                    packet.aquire_stamp.secs,
-                                    packet.aquire_stamp.nsecs
-                                    obj.objid,
+                                    packet.acquire_stamp.secs,
+                                    packet.acquire_stamp.nsecs,
+                                    obj.obj_id,
                                     obj.position.x, 
                                     obj.position.y, 
                                     obj.position.z, 
@@ -131,7 +139,7 @@ class DataListener:
                                     obj.posvel_covariance_diagonal[5],
                                    )], dtype=self.dtype)
                     self.array_buffer.append(a)
-        
+
     def process_buffer(self):
         self.save_array_data()
             
@@ -159,7 +167,10 @@ if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option("--record-time-hrs", type="int", dest="record_time_hrs", default=24,
                         help="number of hours to record data for")
+    parser.add_option("--home-directory", type="str", dest="home_directory", default='~/Desktop/temp',
+                        help="home directory for saving data to")
     (options, args) = parser.parse_args()
     
-    datalistener = DataListener(options.record_time_hrs)
+    datalistener = DataListener(record_time_hrs=options.record_time_hrs, 
+                                home_directory=options.home_directory)
     datalistener.main()
