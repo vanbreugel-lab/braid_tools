@@ -1,5 +1,3 @@
 <launch>
-
-  <node name="braid_ros_listener_v0" pkg="braid_tools" type="braid_ros_listener.py">
-
+  <node name="braid_ros_listener_v0" pkg="braid_tools" type="braid_ros_listener.py"/>
 </launch>

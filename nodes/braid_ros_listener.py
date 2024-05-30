@@ -54,7 +54,7 @@ class BraidProxy:
         for chunk in r.iter_content(chunk_size=None, decode_unicode=True):
             data = parse_chunk(chunk)
             version = data.get('v', 1)  # default because missing in first release
-            assert version in (1, 2)  # check the data version
+            #assert version in (1, 2)  # check the data version
 
             try:
                 msg_dict = data['msg']
@@ -106,7 +106,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     #parser.add_argument("--braid-model-server-url", default='http://0.0.0.0:8397/',
-    parser.add_argument("--braid-model-server-url", default='http://127.0.0.1:8397/',
+    parser.add_argument("--braid-model-server-url", default='http://134.197.37.229:8397/',
                         help="URL of Braid model server")
 
     argv = rospy.myargv()
