@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 This script emulates braid to create fake flydra_mainbrain_super_packets
 
@@ -17,7 +17,7 @@ roslib.load_manifest('geometry_msgs')
 roslib.load_manifest('std_msgs')
 from geometry_msgs.msg import Pose, Quaternion
 from std_msgs.msg import UInt32, Float32
-roslib.load_manifest('ros_flydra')
+#roslib.load_manifest('ros_flydra')
 # from ros_flydra.msg import flydra_mainbrain_super_packet, flydra_mainbrain_packet, flydra_object
 from braid_tools.msg import flydra_mainbrain_super_packet, flydra_mainbrain_packet, flydra_object
 
@@ -57,9 +57,9 @@ class VirtualTrajectory:
         self.y = y
         self.z = z
 
-        _, self.xvel = pynumdiff.linear_model.savgoldiff(x, self.dt, [3, 20])
-        _, self.yvel = pynumdiff.linear_model.savgoldiff(y, self.dt, [3, 20])
-        _, self.zvel = pynumdiff.linear_model.savgoldiff(z, self.dt, [3, 20])
+        _, self.xvel = pynumdiff.linear_model.savgoldiff(x, self.dt, [3, 20, 20])
+        _, self.yvel = pynumdiff.linear_model.savgoldiff(y, self.dt, [3, 20, 20])
+        _, self.zvel = pynumdiff.linear_model.savgoldiff(z, self.dt, [3, 20, 20])
 
         if P is None:
             eye = 0.1*np.eye(6)
