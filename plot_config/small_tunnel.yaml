@@ -1,10 +1,10 @@
-xmin:-.3
-xmax:.3
+xmin: -.3
+xmax: .3
 
-ymin:-.25
-ymax:.25
+ymin: -.25
+ymax: .25
 
-zmin:0
-zmax:.5
+zmin: 0
+zmax: .5
 
-tail:1000
+tail: 300

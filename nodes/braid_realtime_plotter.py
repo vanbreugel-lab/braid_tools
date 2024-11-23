@@ -1,83 +1,120 @@
 #!/usr/bin/env python3
 import matplotlib.pyplot as plt
-import matplotlib.animation as animate
+import numpy as np
+import matplotlib.animation as animation
+from mpl_toolkits.mplot3d import Axes3D
 import rospy
 from std_msgs.msg import Float32, Float32MultiArray
-# from ros_flydra.msg import *
 from braid_tools.msg import flydra_mainbrain_super_packet, flydra_mainbrain_packet, flydra_object
 import yaml
 import time
 from optparse import OptionParser
 
-fig = plt.figure()
-ax = plt.axes(projection='3d')
-x_vec = []
-y_vec = []
-z_vec = []
+class RealTimePlotter:
+    def __init__(self, braid_topic, config_file):
+        self.config_file = config_file
 
-tcall = time.time()
+        # load configuration file
+        with open(config_file) as file:
+            config = yaml.safe_load(file)
+        self.xmin = float(config['xmin'])
+        self.xmax = float(config['xmax'])
+        self.ymin = float(config['ymin'])
+        self.ymax = float(config['ymax'])
+        self.zmin = float(config['zmin'])
+        self.zmax = float(config['zmax'])
+        self.tail = int(config['tail'])
+
+        # example configuration file:
+        '''
+            xmin: -.3
+            xmax: .3
+
+            ymin: -.25
+            ymax: .25
+
+            zmin: 0
+            zmax: .5
+
+            tail: 300
+        '''
+
+        # initialize data
+        self.x_vec = [0,]
+        self.y_vec = [0,]
+        self.z_vec = [0,]
+        self.tcall = time.time()
+
+        # initialize ROS stuff
+        rospy.init_node("braid_realtime_plotter", anonymous=True)
+        rospy.Subscriber(braid_topic, flydra_mainbrain_super_packet, self.trigger_callback)
+        
+        # initialize figure
+        self.fig = plt.figure()
+        self.ax = plt.axes(projection='3d')
+        plt.style.use('seaborn-white')
+        self.ax.set_ylim(self.ymin, self.ymax)
+        self.ax.set_xlim(self.xmin, self.xmax)
+        self.ax.set_zlim(self.zmin, self.zmax)
+        self.ax.set_xlabel('x - axis')
+        self.ax.set_ylabel('y - axis')
+        self.ax.set_zlabel('z - axis')
+
+        # initialize line
+        self.line, = self.ax.plot(self.x_vec, self.y_vec, self.z_vec)
+
+    def trigger_callback(self, super_packet):
+        self.tcall = time.time()
+        obj_ids = []
+        for packet in super_packet.packets:
+            if len(packet.objects) > 0:
+                obj = packet.objects[0]
+                #for obj in packet.objects:
+                self.x_vec.append(obj.position.x)
+                self.y_vec.append(obj.position.y)
+                self.z_vec.append(obj.position.z)
+                if len(packet.objects) > 1:
+                    print('WARNING: only plotting first object! More than 1 object not implemented')
+
+    def main(self):
+
+        def animate(i):
+            # trim data to a short tail
+            self.x_vec = self.x_vec[-1 * self.tail:]
+            self.y_vec = self.y_vec[-1 * self.tail:]
+            self.z_vec = self.z_vec[-1 * self.tail:]
+
+            # update the line
+            self.line.set_xdata(self.x_vec)
+            self.line.set_ydata(self.y_vec)  # update the data
+            self.line.set_3d_properties(self.z_vec)
+
+            return self.line,
+
+        # Init only required for blitting to give a clean slate.
+        def init():
+            self.line.set_xdata(self.x_vec)
+            self.line.set_ydata(self.y_vec)  # update the data
+            self.line.set_3d_properties(self.z_vec)
+            return self.line,
+
+        self.ani = animation.FuncAnimation(self.fig, animate, None, init_func=init,
+                                            interval=15, blit=True)
+        plt.show()
 
 
-def trigger_callback(super_packet):
-    tcall = time.time()
-    obj_ids = []
-    for packet in super_packet.packets:
-        for obj in packet.objects:
-            obj_ids.append(obj.obj_id)
-            x_vec.append(obj.position.x)
-            y_vec.append(obj.position.y)
-            z_vec.append(obj.position.z)
-        # print(obj.obj_id)
 
 
-#### Read in config yaml
-'''
-        config -- path to a .yaml file describing the parameters for triggering. see below for an example.
-'''
-config_file = options.config
-
-with open(config_file) as file:
-    config = yaml.safe_load(file)
-
-# save config inputs to variables
-xmin = config['xmin']
-xmax = config['xmax']
-
-ymin = config['ymin']
-ymax = config['ymax']
-
-zmin = config['zmin']
-zmax = config['zmax']
-
-tail = config['tail']
-
-
-def braid_sub():
-    rospy.init_node("Gimme_the_data", anonymous=True)
-    rospy.Subscriber("/flydra_mainbrain/super_packets", flydra_mainbrain_super_packet, trigger_callback)
-    # rospy.spin()
-    plt.show(block=True)
-
-
-def animate_(i, x_vec, y_vec, z_vec):
-    plt.style.use('seaborn-white')
-    x_vec = x_vec[-1 * tail:]
-    y_vec = y_vec[-1 * tail:]
-    z_vec = z_vec[-1 * tail:]
-    ax.clear()
-    ax.set_ylim(ymin, ymax)
-    ax.set_xlim(xmin, xmax)
-    ax.set_zlim(zmin, zmax)
-    ax.scatter(x_vec, y_vec, z_vec)
-#test
-
-ani = animate.FuncAnimation(fig, animate_, fargs=(x_vec, y_vec, z_vec), interval=10)
-# plt.show()
 if __name__ == "__main__":
-    braid_sub()
     parser = OptionParser()
-    (parser.add_option("--config", type="str", dest="config", default='',
+    parser.add_option("--config", type="str", dest="config", default='',
                       help="Full path that points to a config.yaml file")
-     (options, args)) = parser.parse_args()
+    (options, args) = parser.parse_args()
 
+
+    if 1:
+        config_file = options.config
+
+        real_time_plotter = RealTimePlotter("flydra_mainbrain/super_packets", config_file)
+        real_time_plotter.main()
 
