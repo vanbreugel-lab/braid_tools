@@ -49,26 +49,24 @@ def diff_angle(angles, dt, params,
 
     return wrap_angle(angles_smooth), angles_dot
 
-def get_convex_smoothed_course_and_ang_vel(course, xvel, yvel, dt=0.01, butter_filter_params=[1,0.1], correction_window_for_2pi=5):
+def get_convex_smoothed_course_and_ang_vel(course, xvel, yvel, dt=0.01, butter_filter_params=[1,0.1], correction_window_for_2pi=5, gamma=0.01, correction_gamma=0.1):
     '''
     Generates a "very" smooth angular velocity and angle. Robust to slow and noisy trajectories.
     '''
-    gamma = 0.01
-    correction_gamma = .1
     theta_meas = course 
     
     # Get a smoothed estimate of tan(course)
     tan_theta_cvx = cvxpy.Variable(len(theta_meas))
     vx = xvel
     vy = yvel
-    loss = cvxpy.norm(vx - cvxpy.multiply(tan_theta_cvx, vy), 2) + gamma*cvxpy.tv(tan_theta_cvx) 
+    loss = cvxpy.norm(vy - cvxpy.multiply(tan_theta_cvx, vx), 2) + gamma*cvxpy.tv(tan_theta_cvx) 
     obj = cvxpy.Minimize( loss )
     prob = cvxpy.Problem(obj) 
     prob.solve(solver='MOSEK')
     theta_cvx = np.arctan(tan_theta_cvx.value)
-    theta_cvx = -1*theta_cvx - np.pi/2.
+    #theta_cvx = -1*theta_cvx - np.pi/2.
     
-    # atan is accurate to pi/2, so find the correction factor
+    # atan is accurate to +/- pi, so find the correction factor
     correction = []
     for i in range(len(theta_cvx)):
         if theta_meas[i] - theta_cvx[i] > 2:
@@ -97,6 +95,8 @@ def assign_course_and_ang_vel_to_trajec(trajec,
                                         correction_window_for_2pi=5, 
                                         rough_butter_filter_params=[2,0.5],
                                         smooth_butter_filter_params=[1, 0.1],
+                                        gamma = 0.01,
+                                        correction_gamma = 0.1,
                                         ):
     xvel = trajec.xvel.values
     yvel = trajec.yvel.values
@@ -109,7 +109,9 @@ def assign_course_and_ang_vel_to_trajec(trajec,
     theta_smooth, thetadot_smooth = get_convex_smoothed_course_and_ang_vel(course, xvel, yvel, 
                                                                             dt=dt, 
                                                                             correction_window_for_2pi=correction_window_for_2pi, 
-                                                                            butter_filter_params=smooth_butter_filter_params)
+                                                                            butter_filter_params=smooth_butter_filter_params,
+                                                                            gamma = gamma,
+                                                                            correction_gamma = correction_gamma)
     
     trajec.loc[:,'course'] = course
     trajec.loc[:,'course_smoothish'] = wrap_angle(course_smoothish)
