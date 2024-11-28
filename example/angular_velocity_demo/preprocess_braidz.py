@@ -48,8 +48,6 @@ if __name__ == '__main__':
     braid_df_culled = load_braidz_and_filter(args.directory)
     braid_df_culled = braid_filter_objids(braid_df_culled, length=args.length, xdist_travelled=args.xdist)
 
-    braid_df_culled = braid_df_culled[0:20000].copy()
-
     braid_df_culled['speed'] = np.sqrt(braid_df_culled.xvel**2 + braid_df_culled.yvel**2)
     braid_df_culled = flymath.assign_course_and_ang_vel_to_dataframe(braid_df_culled)
 
