@@ -361,3 +361,46 @@ def plot_xy_trajectory_with_color_overlay(df_3d_trajec_slice,
     obj_id = df_3d_trajec_slice[obj_id_key].values[0]
     ax.set_title(obj_id)
 
+def plot_column_vs_time(df_3d,
+                        column='course_smoothish',
+                        time_key='time_relative_to_flash',
+                        norm_columns=True,
+                        cmap='bone_r',
+                        vmin=0, vmax=1,
+                        bin_y=None,
+                        bin_x=None,
+                        res_y=0.01,
+                        res_x=0.01,
+                        ax=None,
+                          ):
+
+    if bin_y is None:
+        ymin = df_3d[column].min()
+        ymax = df_3d[column].max()
+        bin_y = np.arange(ymin, ymax+res_y, res_y)
+
+    if bin_x is None:
+        xmin = df_3d[time_key].min()
+        xmax = df_3d[time_key].max()
+        bin_x = np.arange(xmin+res/2, xmax+res+res/2, res)
+
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+    M, time_edges, course_edges = np.histogram2d(df_3d[time_key], df_3d[column], 
+                                     bins=[bin_x, bin_y])
+
+    if norm_columns:
+        norm_min = np.min(M, axis=0) 
+        M_min = M - norm_min[None,:]
+        norm_max = np.atleast_2d( np.nanmax(M_min, axis=0) )
+        M_min_max = M_min / norm_max[None,:]
+
+        M = M_min_max
+
+    ax.imshow(M_min_max.T, origin="lower", 
+           extent=[time_edges[0], time_edges[-1], course_edges[0], course_edges[-1]], cmap=cmap)
+
+    ax.set_ylabel(column)
+    ax.set_xlabel(time_key)
