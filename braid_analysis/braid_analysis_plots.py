@@ -330,6 +330,7 @@ def plot_length_of_trajectories_histogram(df_3d, ax=None, dt=0.01, bins=None):
     ax.set_ylabel('Count')
 
 def plot_xy_trajectory_with_color_overlay(df_3d_trajec_slice, 
+                                          obj_id_key='obj_id_unique',
                                           column_for_color='ang_vel_smoother',
                                           plane = 'xy', # xy or xz or yz
                                           cmap='seismic', 
@@ -357,6 +358,6 @@ def plot_xy_trajectory_with_color_overlay(df_3d_trajec_slice,
     ax.scatter(xval, yval, c=df_3d_trajec_slice[column_for_color].values, s=dot_size, cmap='seismic',
                vmin=vmin, vmax=vmax)
 
-    obj_id = df_3d_trajec_slice.obj_id_unique.values[0]
+    obj_id = df_3d_trajec_slice[obj_id_key].values[0]
     ax.set_title(obj_id)
 
