@@ -88,4 +88,52 @@ def assign_unique_id(braid_df, name):
     braid_df['obj_id_unique'] = braid_df['obj_id'].apply(lambda x: name + '_' + str(x))
     return braid_df
 
+def get_obj_ids_that_stay_in_volume(df_3d, obj_id_key='obj_id', zmin=0.1, zmax=0.4, ymin=-0.15, ymax=0.15, xmin=-0.5, xmax=0.5):
+    '''
+    Use fancy pandas stuff to get a list of the object id numbers for which the median x,y,z values lie within the indicate range. 
+
+    Inputs
+    ------
+    df_3d  --------- (dataframe) pandas dataframe from braidz_filemanager.load_filename_as_dataframe_3d
+    obj_id_key ----- (str) which column to use as obj_id, consider using obj_id_unique_event
+    zmin   --------- (float) minimum zval
+    zmax   --------- (float) maximum zval
+    ymin, ymax  ---- (float)
+    xmin, xmax  ---- (float)
+
+    Returns
+    -------
+    obj_ids  ------- (list) of object id numbers
+
+    '''
+
+    min_z = df_3d[[obj_id_key, "z"]].groupby(by=[obj_id_key]).agg(["min"])
+    obj_ids = min_z['z'][(min_z['z']['min'] > zmin)==True].index.values
+    df_3d_filtered = df_3d[df_3d[obj_id_key].isin(obj_ids)]
+
+    df_3d = df_3d_filtered
+    max_z = df_3d[[obj_id_key, "z"]].groupby(by=[obj_id_key]).agg(["max"])
+    obj_ids = max_z['z'][(max_z['z']['max'] < zmax)==True].index.values
+    df_3d_filtered = df_3d[df_3d[obj_id_key].isin(obj_ids)]
+
+    df_3d = df_3d_filtered
+    min_y = df_3d[[obj_id_key, "y"]].groupby(by=[obj_id_key]).agg(["min"])
+    obj_ids = min_y['y'][(min_y['y']['min'] > ymin)==True].index.values
+    df_3d_filtered = df_3d[df_3d[obj_id_key].isin(obj_ids)]
+
+    df_3d = df_3d_filtered
+    max_y = df_3d[[obj_id_key, "y"]].groupby(by=[obj_id_key]).agg(["max"])
+    obj_ids = max_y['y'][(max_y['y']['max'] < ymax)==True].index.values
+    df_3d_filtered = df_3d[df_3d[obj_id_key].isin(obj_ids)]
+
+    df_3d = df_3d_filtered
+    min_x = df_3d[[obj_id_key, "x"]].groupby(by=[obj_id_key]).agg(["min"])
+    obj_ids = min_x['x'][(min_x['x']['min'] > xmin)==True].index.values
+    df_3d_filtered = df_3d[df_3d[obj_id_key].isin(obj_ids)]
+
+    df_3d = df_3d_filtered
+    max_x = df_3d[[obj_id_key, "x"]].groupby(by=[obj_id_key]).agg(["max"])
+    obj_ids = max_x['x'][(max_x['x']['max'] < xmax)==True].index.values
+    df_3d_filtered = df_3d[df_3d[obj_id_key].isin(obj_ids)]
     
+    return obj_ids

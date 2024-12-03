@@ -224,3 +224,137 @@ def plot_2d_datums_per_camera(df_2d, df_3d, frame_range=None):
     ax_x.set_yticks([0.3])
     ax_x.set_xlabel('Frames')
     ax_x.set_ylabel('x pos')
+
+def plot_occupancy_heatmaps(df_3d, xmin, xmax, ymin, ymax, zmin, zmax, 
+                            resolution=0.01, ax_xz=None, ax_xy=None, cmap='magma'):
+
+    res = 0.01
+    binx = np.arange(xmin, xmax+res, res)
+    biny = np.arange(ymin, ymax+res, res)
+    binz = np.arange(zmin, zmax+res, res)
+    
+    if ax_xz is None or ax_xy is None:
+        fig = plt.figure(figsize=(10,5))
+        ax_xz = fig.add_subplot(121)
+        ax_xy = fig.add_subplot(122) 
+
+    # xz
+    Hxz, xedges, zedges = np.histogram2d(df_3d['x'], df_3d['z'], bins=[binx, binz])
+    ax_xz.imshow(np.log(Hxz.T), origin="lower", 
+               extent=[xedges[0], xedges[-1], zedges[0], zedges[-1]], cmap=cmap)
+    ax_xz.set_xlim(xmin, xmax)
+    ax_xz.set_ylim(zmin, zmax)
+    ax_xz.set_aspect('equal')
+
+    ax_xz.set_xlabel('x position')
+    ax_xz.set_ylabel('z position')
+
+
+
+    # xy
+    Hxy, xedges, yedges = np.histogram2d(df_3d['x'], df_3d['y'], bins=[binx, biny])
+    ax_xy.imshow(np.log(Hxy.T), origin="lower", 
+               extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]], cmap=cmap)
+    ax_xy.set_xlim(xmin, xmax)
+    ax_xy.set_ylim(ymin, ymax)
+    ax_xy.set_aspect('equal')
+
+    ax_xy.set_xlabel('x position')
+    ax_xy.set_ylabel('y position')
+
+def plot_starting_and_ending_points(df_3d, obj_id_key,
+                                    xmin, xmax, ymin, ymax, zmin, zmax, 
+                                    start_or_end='start',
+                                    padding=0.1, ax_xz=None, ax_xy=None):
+
+    if start_or_end == 'start':
+        key_frames = df_3d.loc[df_3d.groupby(obj_id_key).frame.idxmin()]
+        color = 'green'
+    elif start_or_end == 'end':
+        key_frames = df_3d.loc[df_3d.groupby(obj_id_key).frame.idxmax()]
+        color = 'red'
+
+    fig = plt.figure(figsize=(10,5))
+    ax_xz = fig.add_subplot(121)
+    ax_xy = fig.add_subplot(122) 
+
+    ax_xz.scatter(key_frames.x.values, key_frames.z.values, c=color)
+    ax_xz.set_xlim(xmin - padding, xmax + padding)
+    ax_xz.set_ylim(zmin - padding, zmax + padding)
+    ax_xz.set_aspect('equal')
+    ax_xz.set_xticks(np.arange(xmin, xmax+0.2, 0.2))
+    ax_xz.set_yticks(np.arange(zmin, zmax+0.2, 0.2))
+    ax_xz.set_xlabel('x position, m')
+    ax_xz.set_ylabel('z position, m')
+
+    ax_xy.scatter(key_frames.x.values, key_frames.y.values, c=color)
+    ax_xy.set_xlim(xmin - padding, xmax + padding)
+    ax_xy.set_ylim(ymin - padding, ymax + padding)
+    ax_xy.set_aspect('equal')
+    ax_xy.set_xticks(np.arange(xmin, xmax+0.2, 0.2))
+    ax_xy.set_yticks(np.arange(ymin, ymax+0.2, 0.2))
+    ax_xy.set_xlabel('x position, m')
+    ax_xy.set_ylabel('y position, m')
+
+def plot_speed_xy_histogram(df_3d, ax=None, bins=None):
+
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+    if bins is None:
+        bins = np.arange(0, 1.5, 0.01)
+
+    results = ax.hist(df_3d.speed, bins)
+
+    ax.set_xlabel('XY Ground Speed, m/s')
+    ax.set_ylabel('Count')
+
+def plot_length_of_trajectories_histogram(df_3d, ax=None, dt=0.01, bins=None):
+
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+    number_frames_per_obj_id = df_3d[["frame", "obj_id"]].groupby(by=["obj_id"]).agg(["count"])
+    n_frames_per_trajec = number_frames_per_obj_id.frame.values
+
+    if bins is None:
+        bins = np.arange(0, 20, 0.3)
+    
+    results = ax.hist(n_frames_per_trajec*dt, bins)
+
+    ax.set_xlabel('trajectory length, sec')
+    ax.set_ylabel('Count')
+
+def plot_xy_trajectory_with_color_overlay(df_3d_trajec_slice, 
+                                          column_for_color='ang_vel_smoother',
+                                          plane = 'xy', # xy or xz or yz
+                                          cmap='seismic', 
+                                          vmin=-50, vmax=50,
+                                          dot_size=2,
+                                          ax=None):
+    
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+    ax.set_aspect('equal')
+
+    if plane == 'xy' or 'xz':
+        xval = df_3d_trajec_slice.x.values
+    elif plane == 'yz':
+        yval = df_3d_trajec_slice.y.values
+
+    if plane == 'xy':
+        yval = df_3d_trajec_slice.y.values
+    elif plane == 'xz' or plane == 'yz':
+        yval = df_3d_trajec_slice.z.values
+
+    ax.plot(xval, yval, color='gray', alpha=0.3)
+    ax.scatter(xval, yval, c=df_3d_trajec_slice[column_for_color].values, s=dot_size, cmap='seismic',
+               vmin=vmin, vmax=vmax)
+
+    obj_id = df_3d_trajec_slice.obj_id_unique.values[0]
+    ax.set_title(obj_id)
+

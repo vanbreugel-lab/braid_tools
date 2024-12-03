@@ -67,9 +67,10 @@ def get_pandas_dataframe_from_uncooperative_hdf5(filename, key='first_key'):
     f = h5py.File(filename,'r')
     all_keys = list(f.keys())
     if key == 'first_key':
-        print('all keys: ')
-        print(all_keys)
-        print('loading first key only')
+        if len(all_keys) > 1:
+            print('all keys: ')
+            print(all_keys)
+            print('WARNING: loading first key only')
         key = all_keys[0]
     data = f[key][()]
     dic = {}
@@ -77,6 +78,19 @@ def get_pandas_dataframe_from_uncooperative_hdf5(filename, key='first_key'):
         dic.setdefault(column_label, data[column_label])
     df = pd.DataFrame(dic)
     return df
+
+def save_preprocessed_braidz(   data_directory, braid_df_culled, 
+                                sub_directory='preprocessed_data', suffix='_preprocessed'):
+    braidz_filename = get_filename(data_directory, '.braidz')
+    preprocessed_data_dir = os.path.join(data_directory, sub_directory)
+    if not os.path.isdir(preprocessed_data_dir):
+        os.mkdir(preprocessed_data_dir)
+
+    preprocessed_data_fname = os.path.basename(braidz_filename).split('.')[0] + suffix + '.hdf'
+    fname = os.path.join(preprocessed_data_dir, preprocessed_data_fname)
+    braid_df_culled.to_hdf(fname, 'DATA_' + os.path.basename(braidz_filename).split('.')[0] )
+    
+    return fname
 
 ###################################################################################
 
