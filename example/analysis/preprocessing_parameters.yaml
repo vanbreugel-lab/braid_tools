@@ -1,0 +1,12 @@
+# where to store preprocessed data
+preprocessed_data_subdir:  'preprocessed_data'
+
+# basic filtering parameters
+min_length: 50
+min_xdist_travelled: 0.1
+
+# frame rate of data
+dt: 0.01
+
+# filename for saving trajectory statistics
+trajec_stats_yaml_filename: 'trajectory_statistics.yaml'
