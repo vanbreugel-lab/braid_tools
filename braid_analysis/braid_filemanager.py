@@ -92,6 +92,16 @@ def save_preprocessed_braidz(   data_directory, braid_df_culled,
     
     return fname
 
+def preprocessed_braidz_exists(   data_directory, 
+                                sub_directory='preprocessed_data', suffix='_preprocessed'):
+    braidz_filename = get_filename(data_directory, '.braidz')
+    preprocessed_data_dir = os.path.join(data_directory, sub_directory)
+
+    preprocessed_data_fname = os.path.basename(braidz_filename).split('.')[0] + suffix + '.hdf'
+    fname = os.path.join(preprocessed_data_dir, preprocessed_data_fname)
+    
+    return os.path.exists(fname)
+
 ###################################################################################
 
 ###################################################################################

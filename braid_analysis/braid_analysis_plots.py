@@ -228,10 +228,12 @@ def plot_2d_datums_per_camera(df_2d, df_3d, frame_range=None):
 def plot_occupancy_heatmaps(df_3d, xmin, xmax, ymin, ymax, zmin, zmax, 
                             resolution=0.01, ax_xz=None, ax_xy=None, cmap='magma'):
 
-    res = 0.01
+    res = resolution
     binx = np.arange(xmin, xmax+res, res)
     biny = np.arange(ymin, ymax+res, res)
     binz = np.arange(zmin, zmax+res, res)
+
+    eps = 1e-6 # for log
     
     if ax_xz is None or ax_xy is None:
         fig = plt.figure(figsize=(10,5))
@@ -240,7 +242,7 @@ def plot_occupancy_heatmaps(df_3d, xmin, xmax, ymin, ymax, zmin, zmax,
 
     # xz
     Hxz, xedges, zedges = np.histogram2d(df_3d['x'], df_3d['z'], bins=[binx, binz])
-    ax_xz.imshow(np.log(Hxz.T), origin="lower", 
+    ax_xz.imshow(np.log(Hxz.T + eps), origin="lower", 
                extent=[xedges[0], xedges[-1], zedges[0], zedges[-1]], cmap=cmap)
     ax_xz.set_xlim(xmin, xmax)
     ax_xz.set_ylim(zmin, zmax)
@@ -253,7 +255,7 @@ def plot_occupancy_heatmaps(df_3d, xmin, xmax, ymin, ymax, zmin, zmax,
 
     # xy
     Hxy, xedges, yedges = np.histogram2d(df_3d['x'], df_3d['y'], bins=[binx, biny])
-    ax_xy.imshow(np.log(Hxy.T), origin="lower", 
+    ax_xy.imshow(np.log(Hxy.T + eps), origin="lower", 
                extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]], cmap=cmap)
     ax_xy.set_xlim(xmin, xmax)
     ax_xy.set_ylim(ymin, ymax)
@@ -296,7 +298,7 @@ def plot_starting_and_ending_points(df_3d, obj_id_key,
     ax_xy.set_xlabel('x position, m')
     ax_xy.set_ylabel('y position, m')
 
-def plot_speed_xy_histogram(df_3d, ax=None, bins=None):
+def plot_speed_xy_histogram(df_3d, ax=None, bins=None, speed_key='speed_xy'):
 
     if ax is None:
         fig = plt.figure()
@@ -305,7 +307,7 @@ def plot_speed_xy_histogram(df_3d, ax=None, bins=None):
     if bins is None:
         bins = np.arange(0, 1.5, 0.01)
 
-    results = ax.hist(df_3d.speed, bins)
+    results = ax.hist(df_3d[speed_key], bins)
 
     ax.set_xlabel('XY Ground Speed, m/s')
     ax.set_ylabel('Count')
