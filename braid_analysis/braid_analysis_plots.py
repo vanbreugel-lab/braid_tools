@@ -226,7 +226,8 @@ def plot_2d_datums_per_camera(df_2d, df_3d, frame_range=None):
     ax_x.set_ylabel('x pos')
 
 def plot_occupancy_heatmaps(df_3d, xmin, xmax, ymin, ymax, zmin, zmax, 
-                            resolution=0.01, ax_xz=None, ax_xy=None, cmap='magma'):
+                            resolution=0.01, ax_xz=None, ax_xy=None, cmap='magma',
+                            log=True, vmin=0, vmax=0.001, norm_by_frames=True):
 
     res = resolution
     binx = np.arange(xmin, xmax+res, res)
@@ -242,8 +243,12 @@ def plot_occupancy_heatmaps(df_3d, xmin, xmax, ymin, ymax, zmin, zmax,
 
     # xz
     Hxz, xedges, zedges = np.histogram2d(df_3d['x'], df_3d['z'], bins=[binx, binz])
-    ax_xz.imshow(np.log(Hxz.T + eps), origin="lower", 
-               extent=[xedges[0], xedges[-1], zedges[0], zedges[-1]], cmap=cmap)
+    if norm_by_frames:
+        Hxz /= np.sum(Hxz)
+    if log:
+        Hxz = np.log(Hxz + eps)
+    ax_xz.imshow(Hxz.T, origin="lower", 
+               extent=[xedges[0], xedges[-1], zedges[0], zedges[-1]], cmap=cmap, vmin=vmin, vmax=vmax)
     ax_xz.set_xlim(xmin, xmax)
     ax_xz.set_ylim(zmin, zmax)
     ax_xz.set_aspect('equal')
@@ -255,8 +260,12 @@ def plot_occupancy_heatmaps(df_3d, xmin, xmax, ymin, ymax, zmin, zmax,
 
     # xy
     Hxy, xedges, yedges = np.histogram2d(df_3d['x'], df_3d['y'], bins=[binx, biny])
-    ax_xy.imshow(np.log(Hxy.T + eps), origin="lower", 
-               extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]], cmap=cmap)
+    if norm_by_frames:
+        Hxy /= np.sum(Hxy)
+    if log:
+        Hxy = np.log(Hxy + eps)
+    ax_xy.imshow(Hxy.T, origin="lower", 
+               extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]], cmap=cmap, vmin=vmin, vmax=vmax)
     ax_xy.set_xlim(xmin, xmax)
     ax_xy.set_ylim(ymin, ymax)
     ax_xy.set_aspect('equal')
@@ -401,6 +410,8 @@ def plot_column_vs_time(df_3d,
 
     ax.imshow(M_min_max.T, origin="lower", 
            extent=[time_edges[0], time_edges[-1], course_edges[0], course_edges[-1]], cmap=cmap)
+
+    ax.set_aspect('auto')
 
     ax.set_ylabel(column)
     ax.set_xlabel(time_key)
