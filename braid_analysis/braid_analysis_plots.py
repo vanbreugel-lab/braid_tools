@@ -377,7 +377,8 @@ def plot_xy_trajectory_with_color_overlay(df_3d_trajec_slice,
 def plot_column_vs_time(df_3d,
                         column='course_smoothish',
                         time_key='time_relative_to_flash',
-                        norm_columns=True,
+                        norm_columns_to_min_max=False,
+                        norm_columns_to_sum=False,
                         cmap='bone_r',
                         vmin=0, vmax=1,
                         bin_y=None,
@@ -386,6 +387,9 @@ def plot_column_vs_time(df_3d,
                         res_x=0.01,
                         ax=None,
                           ):
+
+    if norm_columns_to_sum and norm_columns_to_min_max:
+        raise ValueError('Choose at most one norm option, do not set both to True')
 
     if bin_y is None:
         ymin = df_3d[column].min()
@@ -404,16 +408,21 @@ def plot_column_vs_time(df_3d,
     M, time_edges, column_edges = np.histogram2d(df_3d[time_key], df_3d[column], 
                                      bins=[bin_x, bin_y])
 
-    if norm_columns:
-        norm_min = np.min(M, axis=0) 
-        M_min = M - norm_min[None,:]
-        norm_max = np.atleast_2d( np.nanmax(M_min, axis=0) )
-        M_min_max = M_min / norm_max[None,:]
-
+    if norm_columns_to_min_max:
+        norm_min = np.min(M, axis=1) 
+        M_min = M - norm_min[:,None]
+        norm_max = np.nanmax(M_min, axis=1)
+        M_min_max = M_min / norm_max[:,None]
         M = M_min_max
 
-    ax.imshow(M_min_max.T, origin="lower", 
-           extent=[time_edges[0], time_edges[-1], column_edges[0], column_edges[-1]], cmap=cmap)
+    if norm_columns_to_sum:
+        norm_sum = np.nansum(M, axis=1) 
+        M_norm_sum = M / norm_sum[:,None]
+        M = M_norm_sum
+
+    ax.imshow(M.T, origin="lower", 
+           extent=[time_edges[0], time_edges[-1], column_edges[0], column_edges[-1]], 
+           cmap=cmap, vmin=vmin, vmax=vmax)
 
     ax.set_aspect('auto')
 
