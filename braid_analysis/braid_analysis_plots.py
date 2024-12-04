@@ -234,7 +234,11 @@ def plot_occupancy_heatmaps(df_3d, xmin, xmax, ymin, ymax, zmin, zmax,
     biny = np.arange(ymin, ymax+res, res)
     binz = np.arange(zmin, zmax+res, res)
 
-    eps = 1e-6 # for log
+    # for log
+    eps = 1e-12 # for log
+    if log:
+        vmin = np.log(eps)
+        vmax = np.log(vmax)
     
     if ax_xz is None or ax_xy is None:
         fig = plt.figure(figsize=(10,5))
