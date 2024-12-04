@@ -86,7 +86,9 @@ def save_preprocessed_braidz(   data_directory, braid_df_culled,
     if not os.path.isdir(preprocessed_data_dir):
         os.mkdir(preprocessed_data_dir)
 
-    preprocessed_data_fname = os.path.basename(braidz_filename).split('.')[0] + suffix + '.hdf'
+    preprocessed_data_fname = os.path.basename(braidz_filename).split('.')[0] + suffix # + '.hdf'
+    if preprocessed_data_fname[-4:] != '.hdf':
+        preprocessed_data_fname = preprocessed_data_fname + '.hdf'
     fname = os.path.join(preprocessed_data_dir, preprocessed_data_fname)
     braid_df_culled.to_hdf(fname, 'DATA_' + os.path.basename(braidz_filename).split('.')[0] )
     
