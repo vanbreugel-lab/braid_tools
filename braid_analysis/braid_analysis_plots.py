@@ -401,7 +401,7 @@ def plot_column_vs_time(df_3d,
         fig = plt.figure()
         ax = fig.add_subplot(111)
 
-    M, time_edges, course_edges = np.histogram2d(df_3d[time_key], df_3d[column], 
+    M, time_edges, column_edges = np.histogram2d(df_3d[time_key], df_3d[column], 
                                      bins=[bin_x, bin_y])
 
     if norm_columns:
@@ -413,9 +413,12 @@ def plot_column_vs_time(df_3d,
         M = M_min_max
 
     ax.imshow(M_min_max.T, origin="lower", 
-           extent=[time_edges[0], time_edges[-1], course_edges[0], course_edges[-1]], cmap=cmap)
+           extent=[time_edges[0], time_edges[-1], column_edges[0], column_edges[-1]], cmap=cmap)
 
     ax.set_aspect('auto')
 
     ax.set_ylabel(column)
     ax.set_xlabel(time_key)
+
+    ax.set_ylim(column_edges[0], column_edges[-1])
+    ax.set_xlim(time_edges[0], time_edges[-1])
