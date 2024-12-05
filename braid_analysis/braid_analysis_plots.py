@@ -368,7 +368,7 @@ def plot_xy_trajectory_with_color_overlay(df_3d_trajec_slice,
         yval = df_3d_trajec_slice.z.values
 
     ax.plot(xval, yval, color='gray', alpha=0.3)
-    ax.scatter(xval, yval, c=df_3d_trajec_slice[column_for_color].values, s=dot_size, cmap='seismic',
+    ax.scatter(xval, yval, c=df_3d_trajec_slice[column_for_color].values, s=dot_size, cmap=cmap,
                vmin=vmin, vmax=vmax)
 
     obj_id = df_3d_trajec_slice[obj_id_key].values[0]
