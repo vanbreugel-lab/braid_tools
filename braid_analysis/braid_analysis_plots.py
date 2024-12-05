@@ -387,6 +387,7 @@ def plot_column_vs_time(df_3d,
                         res_x=0.01,
                         ax=None,
                         interpolation='nearest',
+                        return_array=False,
                           ):
 
     if norm_columns_to_sum and norm_columns_to_min_max:
@@ -432,3 +433,6 @@ def plot_column_vs_time(df_3d,
 
     ax.set_ylim(column_edges[0], column_edges[-1])
     ax.set_xlim(time_edges[0], time_edges[-1])
+
+    if return_array:
+        return M.T, time_edges, column_edges
