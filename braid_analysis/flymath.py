@@ -145,3 +145,119 @@ def assign_course_and_ang_vel_to_dataframe(df,
     return fdf
 
 ########################################################################################################
+
+def get_continuous_chunks(array, array2=None, jump=1, return_index=False):
+    """
+    Splits array into a list of continuous chunks. Eg. [1,2,3,4,5,7,8,9] becomes [[1,2,3,4,5], [7,8,9]]
+    
+    array2  -- optional second array to split in the same way array is split
+    jump    -- specifies size of jump in data to create a break point
+    """
+    diffarray = diffa(array)
+    break_points = np.where(np.abs(diffarray) > jump)[0]
+    break_points = np.insert(break_points, 0, 0)
+    break_points = np.insert(break_points, len(break_points), len(array))
+    
+    chunks = []
+    array2_chunks = []
+    index = []
+    for i, break_point in enumerate(break_points):
+        if break_point >= len(array):
+            break
+        chunk = array[break_point:break_points[i+1]]
+        if type(chunk) is not list:
+            chunk = chunk.tolist()
+        chunks.append(chunk)
+        
+        if array2 is not None:
+            array2_chunk = array2[break_point:break_points[i+1]]
+            if type(array2_chunk) is not list:
+                array2_chunk = array2_chunk.tolist()
+            array2_chunks.append(array2_chunk)
+        
+        if return_index:
+            indices_for_chunk = np.arange(break_point,break_points[i+1])
+            index.append(indices_for_chunk)
+            
+    if type(break_points) is not list:
+        break_points = break_points.tolist()
+        
+    if return_index:
+        return index
+    
+    if array2 is None:
+        return chunks, break_points
+    
+    else:
+        return chunks, array2_chunks, break_points
+
+##########################################################################################################
+# Saccade detector (modified Geometric Saccade Detector)
+
+def get_score_amp(args):
+    traj, t, delta_frames, time_key, dt = args
+    sub_slice = traj[traj[time_key].between(t - delta_frames*dt, 
+                                       t + delta_frames*dt)].copy()
+    ref_ind = np.where(sub_slice[time_key] == t)[0][0]
+    ref_x = sub_slice['x'].iloc[ref_ind]
+    ref_y = sub_slice['y'].iloc[ref_ind]
+    sub_slice['norm_x'] = sub_slice['x'].sub(ref_x)
+    sub_slice['norm_y'] = sub_slice['y'].sub(ref_y)
+    
+    
+    sub_slice['alpha_before'] = np.arctan2(sub_slice['norm_y'], sub_slice['norm_x'])
+    sub_slice['alpha_after'] = np.arctan2(-1*sub_slice['norm_y'], -1*sub_slice['norm_x'])
+    sub_slice['r'] = np.sqrt( sub_slice['norm_y']**2 + sub_slice['norm_x']**2 )
+    
+    theta_before = median_angle(sub_slice.loc[sub_slice[time_key] < t, 'alpha_before'])
+    theta_after = median_angle(sub_slice.loc[sub_slice[time_key] > t, 'alpha_after'])
+    amp = np.abs(np.arccos( np.cos(theta_before)*np.cos(theta_after) + np.sin(theta_before)*np.sin(theta_after) ))
+    
+    disp = sub_slice['r'].sum()
+    
+    return t, disp, amp
+
+def assign_saccade_info_with_modified_gsd(traj, delta_frames=5, time_key='timestamp', obj_id_key='obj_id'):
+    objid = traj[obj_id_key].iloc[0]
+    dt = 1/int(np.round(1/np.median(np.diff(trajec[time_key]))))
+    disps, amps, frames = [], [], []
+    unique_times = traj[time_key].unique()
+    args =[(traj, t, delta_frames, time_key, dt) for t in unique_times]
+  
+    with multiprocessing.Pool() as pool:
+        out_array =pool.map(get_score_amp, args)
+        #disps.append(disp)
+       # amps.append(amp)
+        #frames.append(q)
+    for e in out_array:
+        frames.append(e[0])
+        disps.append(e[1])
+        amps.append(e[2])
+
+    
+    traj.loc[:,'saccade_gsd_score'] = np.nan_to_num(np.array(amps)**2*np.array(disps)*np.sign(trajec.ang_vel_smoother), 0)
+    traj.loc[:,'saccade_gsd_amp'] = np.nan_to_num(amps, 0)
+    traj.loc[:,'saccade_gsd_disp'] = np.nan_to_num(disps, 0)
+    
+    return traj
+
+
+def get_saccade_indices(trajec, height=0.001, distance=10, width=1, plot=False):
+
+    prominence = height*2
+    
+    score = np.abs(trajec['saccade_gsd_score'].values)
+    peaks = scipy.signal.find_peaks(score, height=height, distance=distance, prominence=prominence, width=width)
+
+    if plot:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        braid_analysis_plots.plot_xy_trajectory_with_color_overlay(trajec, column_for_color='saccade_gsd_score',
+                                                                   obj_id_key='obj_id', vmin=-0.01, vmax=0.01, ax=ax)
+        plt.gca().set_prop_cycle(None)
+        for ix in peaks[0]:
+            ax.plot(trajec.iloc[ix]['x'], trajec.iloc[ix]['y'], 'x')
+
+    return peaks[0]
+
+###############################################################################################################################
