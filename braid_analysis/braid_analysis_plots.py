@@ -280,7 +280,10 @@ def plot_occupancy_heatmaps(df_3d, xmin, xmax, ymin, ymax, zmin, zmax,
 def plot_starting_and_ending_points(df_3d, obj_id_key,
                                     xmin, xmax, ymin, ymax, zmin, zmax, 
                                     start_or_end='start',
-                                    padding=0.1, ax_xz=None, ax_xy=None):
+                                    padding=0.1, ax_xz=None, ax_xy=None,
+                                    dot_size=1):
+
+    df_3d = df_3d[~df_3d.xvel.isna()].copy()
 
     if start_or_end == 'start':
         key_frames = df_3d.loc[df_3d.groupby(obj_id_key).frame.idxmin()]
@@ -289,11 +292,12 @@ def plot_starting_and_ending_points(df_3d, obj_id_key,
         key_frames = df_3d.loc[df_3d.groupby(obj_id_key).frame.idxmax()]
         color = 'red'
 
-    fig = plt.figure(figsize=(10,5))
-    ax_xz = fig.add_subplot(121)
-    ax_xy = fig.add_subplot(122) 
+    if ax_xy is None or ax_xz is None:
+        fig = plt.figure(figsize=(10,5))
+        ax_xz = fig.add_subplot(121)
+        ax_xy = fig.add_subplot(122) 
 
-    ax_xz.scatter(key_frames.x.values, key_frames.z.values, c=color)
+    ax_xz.scatter(key_frames.x.values, key_frames.z.values, c=color, s=dot_size)
     ax_xz.set_xlim(xmin - padding, xmax + padding)
     ax_xz.set_ylim(zmin - padding, zmax + padding)
     ax_xz.set_aspect('equal')
@@ -302,7 +306,7 @@ def plot_starting_and_ending_points(df_3d, obj_id_key,
     ax_xz.set_xlabel('x position, m')
     ax_xz.set_ylabel('z position, m')
 
-    ax_xy.scatter(key_frames.x.values, key_frames.y.values, c=color)
+    ax_xy.scatter(key_frames.x.values, key_frames.y.values, c=color, s=dot_size)
     ax_xy.set_xlim(xmin - padding, xmax + padding)
     ax_xy.set_ylim(ymin - padding, ymax + padding)
     ax_xy.set_aspect('equal')
@@ -322,7 +326,7 @@ def plot_speed_xy_histogram(df_3d, ax=None, bins=None, speed_key='speed_xy'):
 
     results = ax.hist(df_3d[speed_key], bins)
 
-    ax.set_xlabel('XY Ground Speed, m/s')
+    ax.set_xlabel(speed_key)
     ax.set_ylabel('Count')
 
 def plot_length_of_trajectories_histogram(df_3d, ax=None, dt=0.01, bins=None):
