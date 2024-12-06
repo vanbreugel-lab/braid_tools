@@ -2,12 +2,19 @@ import numpy as np
 import pynumdiff
 import cvxpy
 import pandas as pd
+import multiprocessing
+import scipy.signal
+import matplotlib.pyplot as plt
+from braid_analysis import braid_analysis_plots
 
 ########################################################################################################
 ## Course direction and angular velocity functions
 
 def wrap_angle(a):
     return np.arctan2(np.sin(a), np.cos(a))
+
+def median_angle(angle):
+    return np.arctan2(np.median(np.sin(angle)), np.median(np.cos(angle)))
 
 def unwrap_angle(z, correction_window_for_2pi=5, n_range=2, plot=False):
     # automatically scales n_range to most recent value, and maybe faster
@@ -218,8 +225,10 @@ def get_score_amp(args):
     return t, disp, amp
 
 def assign_saccade_info_with_modified_gsd(traj, delta_frames=5, time_key='timestamp', obj_id_key='obj_id'):
+    traj = traj[~traj.ang_vel_smoother.isna()].copy()
+
     objid = traj[obj_id_key].iloc[0]
-    dt = 1/int(np.round(1/np.median(np.diff(trajec[time_key]))))
+    dt = 1/int(np.round(1/np.median(np.diff(traj[time_key]))))
     disps, amps, frames = [], [], []
     unique_times = traj[time_key].unique()
     args =[(traj, t, delta_frames, time_key, dt) for t in unique_times]
@@ -235,7 +244,7 @@ def assign_saccade_info_with_modified_gsd(traj, delta_frames=5, time_key='timest
         amps.append(e[2])
 
     
-    traj.loc[:,'saccade_gsd_score'] = np.nan_to_num(np.array(amps)**2*np.array(disps)*np.sign(trajec.ang_vel_smoother), 0)
+    traj.loc[:,'saccade_gsd_score'] = np.nan_to_num(np.array(amps)**2*np.array(disps)*np.sign(traj.ang_vel_smoother), 0)
     traj.loc[:,'saccade_gsd_amp'] = np.nan_to_num(amps, 0)
     traj.loc[:,'saccade_gsd_disp'] = np.nan_to_num(disps, 0)
     
