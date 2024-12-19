@@ -1,6 +1,5 @@
 import sys
 import zipfile
-from braid_analysis import bag2hdf5_python3 as bag2hdf5
 import h5py
 import os
 
@@ -48,17 +47,18 @@ def get_filename(path, contains, does_not_contain=['~', '.pyc']):
         print (filelist)
         print ('Found too many, or too few files')
     return None
-            
-def load_bag_as_hdf5(bag_filename, skip_messages=[]):
-    output_fname = bag_filename.split('.')[0] + '.hdf5'
-    print (output_fname)
-    if not os.path.exists(output_fname):
-        bag2hdf5.bag2hdf5(   bag_filename,
-                             output_fname,
-                             max_strlen=200,
-                             skip_messages=skip_messages)    
-    metadata = h5py.File(output_fname, 'r')
-    return metadata
+
+# this is supposed to live in windtunnel_optotrigger, but keeping here just in case        
+# def load_bag_as_hdf5(bag_filename, skip_messages=[]):
+#     output_fname = bag_filename.split('.')[0] + '.hdf5'
+#     print (output_fname)
+#     if not os.path.exists(output_fname):
+#         bag2hdf5.bag2hdf5(   bag_filename,
+#                              output_fname,
+#                              max_strlen=200,
+#                              skip_messages=skip_messages)    
+#     metadata = h5py.File(output_fname, 'r')
+#     return metadata
 
 def get_pandas_dataframe_from_uncooperative_hdf5(filename, key='first_key'):
     '''
