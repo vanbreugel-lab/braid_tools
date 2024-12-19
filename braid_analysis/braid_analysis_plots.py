@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import pynumdiff
 
 def plot_3d_trajectory(df_3d, 
                        obj_ids=None,
@@ -383,6 +384,7 @@ def plot_column_vs_time(df_3d,
                         time_key='time_relative_to_flash',
                         norm_columns_to_min_max=False,
                         norm_columns_to_sum=False,
+                        norm_columns_to_min_max_smoothing=0,
                         cmap='bone_r',
                         vmin=0, vmax=1,
                         bin_y=None,
@@ -393,6 +395,13 @@ def plot_column_vs_time(df_3d,
                         interpolation='nearest',
                         return_array=False,
                           ):
+    '''
+    norm_columns_to_min_max -- make sure that each column in time has a minimum of 0 and a maxmimum of 1
+    norm_columns_to_sum -- make sure that each column in time sums to 1
+    norm_columns_to_min_max_smoothing -- if using norm_columns_to_min_max, smooth the min and max to remove aliasing artifacts. 
+                                         Integer value for window size in a sliding window smoother corresponding to pynumdiff.meandiff
+
+    '''
 
     if norm_columns_to_sum and norm_columns_to_min_max:
         raise ValueError('Choose at most one norm option, do not set both to True')
@@ -416,8 +425,16 @@ def plot_column_vs_time(df_3d,
 
     if norm_columns_to_min_max:
         norm_min = np.min(M, axis=1) 
+        
+        if norm_columns_to_min_max_smoothing > 0:
+            norm_min, _ = pynumdiff.meandiff(norm_min,1,[norm_columns_to_min_max_smoothing])
+
         M_min = M - norm_min[:,None]
         norm_max = np.nanmax(M_min, axis=1)
+
+        if norm_columns_to_min_max_smoothing > 0:
+            norm_max, _ = pynumdiff.meandiff(norm_max,1,[norm_columns_to_min_max_smoothing])
+
         M_min_max = M_min / norm_max[:,None]
         M = M_min_max
 
