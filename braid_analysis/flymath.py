@@ -16,6 +16,9 @@ def wrap_angle(a):
 def median_angle(angle):
     return np.arctan2(np.median(np.sin(angle)), np.median(np.cos(angle)))
 
+def mean_angle(angle):
+    return np.arctan2(np.mean(np.sin(angle)), np.mean(np.cos(angle)))
+
 def unwrap_angle(z, correction_window_for_2pi=5, n_range=2, plot=False):
     # automatically scales n_range to most recent value, and maybe faster
     smooth_zs = np.array(z[0:2])
