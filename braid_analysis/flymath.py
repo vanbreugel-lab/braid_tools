@@ -107,6 +107,7 @@ def assign_course_and_ang_vel_to_trajec(trajec,
                                         smooth_butter_filter_params=[1, 0.1],
                                         gamma = 0.01,
                                         correction_gamma = 0.1,
+                                        do_cvx_smoother=False,
                                         ):
     xvel = trajec.xvel.values
     yvel = trajec.yvel.values
@@ -115,21 +116,21 @@ def assign_course_and_ang_vel_to_trajec(trajec,
                                                                                         dt=dt, 
                                                                                         correction_window_for_2pi=correction_window_for_2pi, 
                                                                                         butter_filter_params=rough_butter_filter_params)
-
-    theta_smooth, thetadot_smooth = get_convex_smoothed_course_and_ang_vel(course, xvel, yvel, 
-                                                                            dt=dt, 
-                                                                            correction_window_for_2pi=correction_window_for_2pi, 
-                                                                            butter_filter_params=smooth_butter_filter_params,
-                                                                            gamma = gamma,
-                                                                            correction_gamma = correction_gamma)
-    
     trajec.loc[:,'course'] = course
     trajec.loc[:,'course_smoothish'] = wrap_angle(course_smoothish)
     trajec.loc[:,'ang_vel_smoothish'] = ang_vel_smoothish
-
-    trajec.loc[:,'course_smoother'] = wrap_angle(theta_smooth)
-    trajec.loc[:,'ang_vel_smoother'] = thetadot_smooth
-
+    
+    if do_cvx_smoother:
+        theta_smooth, thetadot_smooth = get_convex_smoothed_course_and_ang_vel(course, xvel, yvel, 
+		                                                                    dt=dt, 
+		                                                                    correction_window_for_2pi=correction_window_for_2pi, 
+		                                                                    butter_filter_params=smooth_butter_filter_params,
+		                                                                    gamma = gamma,
+		                                                                    correction_gamma = correction_gamma)
+        trajec.loc[:,'course_smoother'] = wrap_angle(theta_smooth)
+        trajec.loc[:,'ang_vel_smoother'] = thetadot_smooth
+    
+    
     return trajec
 
 def assign_course_and_ang_vel_to_dataframe(df, 
