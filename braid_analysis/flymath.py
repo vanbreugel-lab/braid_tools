@@ -138,6 +138,7 @@ def assign_course_and_ang_vel_to_dataframe(df,
                                             correction_window_for_2pi=5, 
                                             rough_butter_filter_params=[2,0.5],
                                             smooth_butter_filter_params=[1, 0.1],
+                                            do_cvx_smoother=False,
                                             ):
     
     df_obj_vec =[]
@@ -148,6 +149,7 @@ def assign_course_and_ang_vel_to_dataframe(df,
                                         correction_window_for_2pi=correction_window_for_2pi, 
                                         rough_butter_filter_params=rough_butter_filter_params,
                                         smooth_butter_filter_params=smooth_butter_filter_params,
+                                        do_cvx_smoother=do_cvx_smoother,
                                         )
         df_obj_vec.append(trajec)
 
