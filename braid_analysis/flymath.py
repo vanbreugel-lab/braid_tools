@@ -174,6 +174,11 @@ def assign_course_and_ang_vel_to_dataframe(df,
 
 ########################################################################################################
 
+def diffa(array):
+    d = np.diff(array)
+    d = np.hstack( (d[0], d) )
+    return d
+
 def get_continuous_chunks(array, array2=None, jump=1, return_index=False):
     """
     Splits array into a list of continuous chunks. Eg. [1,2,3,4,5,7,8,9] becomes [[1,2,3,4,5], [7,8,9]]
