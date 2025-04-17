@@ -154,6 +154,7 @@ def assign_course_and_ang_vel_to_dataframe(df,
                                             rough_butter_filter_params=[2,0.5],
                                             smooth_butter_filter_params=[1, 0.1],
                                             do_cvx_smoother=False,
+                                            object_key='obj_id_unique',
                                             ):
     
     df_obj_vec =[]
