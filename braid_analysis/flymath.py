@@ -6,6 +6,7 @@ import multiprocessing
 import scipy.signal
 import matplotlib.pyplot as plt
 from braid_analysis import braid_analysis_plots
+from multiprocessing import Pool
 
 ########################################################################################################
 ## Course direction and angular velocity functions
@@ -137,11 +138,11 @@ def assign_course_and_ang_vel_to_trajec(trajec,
     
     if do_cvx_smoother:
         theta_smooth, thetadot_smooth = get_convex_smoothed_course_and_ang_vel(course, xvel, yvel, 
-		                                                                    dt=dt, 
-		                                                                    correction_window_for_2pi=correction_window_for_2pi, 
-		                                                                    butter_filter_params=smooth_butter_filter_params,
-		                                                                    gamma = gamma,
-		                                                                    correction_gamma = correction_gamma)
+                                                                            dt=dt, 
+                                                                            correction_window_for_2pi=correction_window_for_2pi, 
+                                                                            butter_filter_params=smooth_butter_filter_params,
+                                                                            gamma = gamma,
+                                                                            correction_gamma = correction_gamma)
         trajec.loc[:,'course_smoother'] = wrap_angle(theta_smooth)
         trajec.loc[:,'ang_vel_smoother'] = thetadot_smooth
     

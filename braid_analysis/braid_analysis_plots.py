@@ -463,6 +463,29 @@ def plot_column_vs_time(df_3d,
     if return_array:
         return M.T, time_edges, column_edges
 
+def add_stimulus_shading_to_ax(ax, df_3d, stimulus_column, 
+                               ymax, ymin,
+                               time_key='time_relative_to_flash',
+                               obj_id_key='obj_id_unique_event', cmap='Reds',
+                               vmin=0, vmax=1, alpha=0.3, zorder=1,
+                               ):
+    '''
+    Show stimulus as a gradient polygon on the provided ax. 
+    This function will find a "demo" trajectory and grab the stimulus_column key and use that to generate the shading.
+    It assumes that all trajectories in the df_3d provided have the same stimulus_column values.
+
+    '''
+    obj_id_demo = df_3d[obj_id_key].unique()[0]
+    trajec = df_3d[df_3d[obj_id_key]==obj_id_demo]
+    x = trajec[time_key].values
+    polygon = ax.fill_between(x, ymin*np.ones_like(x), ymax*np.ones_like(x), lw=0, color='none')
+    verts = np.vstack([p.vertices for p in polygon.get_paths()])
+    gradient = ax.imshow(trajec.lights_on.values.reshape(1, -1), cmap=cmap, aspect='auto',
+                         extent=[verts[:, 0].min(), verts[:, 0].max(), verts[:, 1].min(), verts[:, 1].max()], 
+                         vmin=vmin, vmax=vmax, 
+                         zorder=zorder, alpha=alpha)
+    #gradient.set_clip_path(polygon.get_paths()[0], transform=plt.gca().transData) # <<< this causes issues when writing to an svg
+
 #############################################################################################################
 # Arrow head trajectories
 
