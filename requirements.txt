@@ -1,0 +1,11 @@
+pandas
+h5py
+matplotlib
+pynumdiff
+cvxpy
+pyyaml
+pycryptodomex
+gnupg
+rospkg
+tables
+bagpy
