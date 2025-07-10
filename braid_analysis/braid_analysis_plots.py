@@ -335,7 +335,7 @@ def plot_speed_xy_histogram(df_3d, ax=None, bins=None, speed_key='speed_xy'):
     ax.set_xlabel(speed_key)
     ax.set_ylabel('Count')
 
-def plot_length_of_trajectories_histogram(df_3d, ax=None, dt=0.01, bins=None):
+def plot_length_of_trajectories_histogram(df_3d, obj_id_key="obj_id", ax=None, dt=0.01, bins=None):
 
     if ax is None:
         fig = plt.figure()
