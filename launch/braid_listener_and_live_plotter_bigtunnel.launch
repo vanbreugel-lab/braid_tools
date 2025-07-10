@@ -1,0 +1,6 @@
+<launch>
+  <node name="braid_ros_listener_v0" pkg="braid_tools" type="braid_ros_listener.py"  args="--braid-model-server-url='http://134.197.37.229:8397/'"/>
+  
+  <node name="braid_ros_liveplotter" pkg="braid_tools" type="braid_realtime_plotter.py"  args="--config='/home/chrimson/catkin_ws/src/braid_tools/plot_config/big_tunnel.yaml'"/>
+
+</launch>
