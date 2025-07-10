@@ -572,6 +572,11 @@ def get_wedges_for_heading_plot(x, y, color, orientation, size_radius=0.1, size_
     return pc
 
 def plot_arrowhead_trajectory(x, y, color='black', arrow_length=0.05, arrow_angle=30, ax=None, linewidth=1):
+
+    # ignore nans
+    x = x[~np.isnan(x)]
+    y = y[~np.isnan(y)]
+
     xvel = pynumdiff.finite_difference.second_order(x, 1)[1]
     yvel = pynumdiff.finite_difference.second_order(y, 1)[1]
     orientations = np.arctan2(yvel, xvel)
@@ -584,6 +589,9 @@ def plot_arrowhead_trajectory(x, y, color='black', arrow_length=0.05, arrow_angl
         ax.set_aspect('equal')
         
     ax.plot(x,y, color=color, linewidth=linewidth)
+
+    np.isnan(x)==False
+
     wedge = get_wedges_for_heading_plot([x[-1],],[y[-1],], color, [last_orientation*180/np.pi,], 
                                         size_radius=arrow_length, size_angle=arrow_angle)
     ax.add_collection(wedge)
