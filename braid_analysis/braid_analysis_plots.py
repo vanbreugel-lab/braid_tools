@@ -341,7 +341,7 @@ def plot_length_of_trajectories_histogram(df_3d, obj_id_key="obj_id", ax=None, d
         fig = plt.figure()
         ax = fig.add_subplot(111)
 
-    number_frames_per_obj_id = df_3d[["frame", "obj_id"]].groupby(by=["obj_id"]).agg(["count"])
+    number_frames_per_obj_id = df_3d[["frame", obj_id_key]].groupby(by=[obj_id_key]).agg(["count"])
     n_frames_per_trajec = number_frames_per_obj_id.frame.values
 
     if bins is None:
