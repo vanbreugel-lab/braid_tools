@@ -155,12 +155,12 @@ def assign_course_and_ang_vel_to_dataframe(df,
                                             rough_butter_filter_params=[2,0.5],
                                             smooth_butter_filter_params=[1, 0.1],
                                             do_cvx_smoother=False,
-                                            object_key='obj_id_unique',
+                                            obj_id_key='obj_id_unique',
                                             ):
     
     df_obj_vec =[]
-    for objid in df['obj_id_unique'].unique():
-        trajec = df[df['obj_id_unique']==objid].copy()
+    for objid in df[obj_id_key].unique():
+        trajec = df[df[obj_id_key]==objid].copy()
         trajec = assign_course_and_ang_vel_to_trajec(trajec, 
                                         dt=dt, 
                                         correction_window_for_2pi=correction_window_for_2pi, 
