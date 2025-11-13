@@ -419,7 +419,7 @@ def plot_column_vs_time(df_3d,
     if bin_x is None:
         xmin = df_3d[time_key].min()
         xmax = df_3d[time_key].max()
-        bin_x = np.arange(xmin+res/2, xmax+res+res/2, res)
+        bin_x = np.arange(xmin+res_x/2, xmax+res_x+res_x/2, res_x)
 
     if ax is None:
         fig = plt.figure()

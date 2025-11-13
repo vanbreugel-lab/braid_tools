@@ -1,13 +1,14 @@
 import pandas as pd
 import numpy as np
 
-def get_long_obj_ids_fast_pandas(df_3d, length=30):
+def get_long_obj_ids_fast_pandas(df_3d, obj_id_key='obj_id_unique', length=30):
     '''
     Use fancy pandas stuff to get a list of the object id numbers that are longer than the given length (in frames)
 
     Inputs
     ------
     df_3d  --------- (dataframe) pandas dataframe from braidz_filemanager.load_filename_as_dataframe_3d
+    obj_id_key ----- (str) column name to use, obj_id or obj_id_unique 
     length --------- (int) minimum length for objects, in frames
 
     Returns
@@ -16,11 +17,11 @@ def get_long_obj_ids_fast_pandas(df_3d, length=30):
 
     '''
     try:
-        number_frames_per_obj_id = df_3d[["frame", "obj_id"]].groupby(by=["obj_id"]).agg(["count"])
+        number_frames_per_obj_id = df_3d[["frame", obj_id_key]].groupby(by=[obj_id_key]).agg(["count"])
         obj_ids = number_frames_per_obj_id[  number_frames_per_obj_id[('frame', 'count')]  >  length  ].index.values
         return obj_ids
     except:
-        number_frames_per_obj_id = df_3d[["frames", "objid"]].groupby(by=["objid"]).agg(["count"])
+        number_frames_per_obj_id = df_3d[["frames", obj_id_key]].groupby(by=[obj_id_key]).agg(["count"])
         obj_ids = number_frames_per_obj_id[  number_frames_per_obj_id[('frames', 'count')]  >  length  ].index.values
         return obj_ids
 
