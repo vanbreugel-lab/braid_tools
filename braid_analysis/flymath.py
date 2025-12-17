@@ -155,12 +155,12 @@ def assign_course_and_ang_vel_to_dataframe(df,
                                             rough_butter_filter_params=[2,0.5],
                                             smooth_butter_filter_params=[1, 0.1],
                                             do_cvx_smoother=False,
-                                            object_key='obj_id_unique',
+                                            obj_id_key='obj_id_unique',
                                             ):
     
     df_obj_vec =[]
-    for objid in df['obj_id_unique'].unique():
-        trajec = df[df['obj_id_unique']==objid].copy()
+    for objid in df[obj_id_key].unique():
+        trajec = df[df[obj_id_key]==objid].copy()
         trajec = assign_course_and_ang_vel_to_trajec(trajec, 
                                         dt=dt, 
                                         correction_window_for_2pi=correction_window_for_2pi, 
@@ -252,10 +252,10 @@ def get_score_amp(args):
     
     return t, disp, amp
 
-def assign_saccade_info_with_modified_gsd(traj, delta_frames=5, time_key='timestamp', obj_id_key='obj_id'):
+def assign_saccade_info_with_modified_gsd(traj, delta_frames=5, time_key='timestamp', obj_id_key='obj_id', ang_vel_key='ang_vel_smoothish'):
     #traj = traj[~traj.ang_vel_smoother.isna()].copy()
     traj[time_key] = traj[time_key].interpolate()
-    traj['ang_vel_smoother'] = traj['ang_vel_smoother'].interpolate()
+    traj[ang_vel_key] = traj[ang_vel_key].interpolate()
 
     objid = traj[obj_id_key].iloc[0]
     dt = 1/int(np.round(1/np.median(np.diff(traj[time_key]))))
@@ -274,7 +274,7 @@ def assign_saccade_info_with_modified_gsd(traj, delta_frames=5, time_key='timest
         amps.append(e[2])
 
     
-    traj.loc[:,'saccade_gsd_score'] = np.nan_to_num(np.array(amps)**2*np.array(disps)*np.sign(traj.ang_vel_smoother), 0)
+    traj.loc[:,'saccade_gsd_score'] = np.nan_to_num(np.array(amps)**2*np.array(disps)*np.sign(traj[ang_vel_key]), 0)
     traj.loc[:,'saccade_gsd_amp'] = np.nan_to_num(amps, 0)
     traj.loc[:,'saccade_gsd_disp'] = np.nan_to_num(disps, 0)
     

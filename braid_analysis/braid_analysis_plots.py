@@ -335,13 +335,13 @@ def plot_speed_xy_histogram(df_3d, ax=None, bins=None, speed_key='speed_xy'):
     ax.set_xlabel(speed_key)
     ax.set_ylabel('Count')
 
-def plot_length_of_trajectories_histogram(df_3d, ax=None, dt=0.01, bins=None):
+def plot_length_of_trajectories_histogram(df_3d, obj_id_key="obj_id", ax=None, dt=0.01, bins=None):
 
     if ax is None:
         fig = plt.figure()
         ax = fig.add_subplot(111)
 
-    number_frames_per_obj_id = df_3d[["frame", "obj_id"]].groupby(by=["obj_id"]).agg(["count"])
+    number_frames_per_obj_id = df_3d[["frame", obj_id_key]].groupby(by=[obj_id_key]).agg(["count"])
     n_frames_per_trajec = number_frames_per_obj_id.frame.values
 
     if bins is None:
@@ -419,7 +419,7 @@ def plot_column_vs_time(df_3d,
     if bin_x is None:
         xmin = df_3d[time_key].min()
         xmax = df_3d[time_key].max()
-        bin_x = np.arange(xmin+res/2, xmax+res+res/2, res)
+        bin_x = np.arange(xmin+res_x/2, xmax+res_x+res_x/2, res_x)
 
     if ax is None:
         fig = plt.figure()
@@ -572,6 +572,11 @@ def get_wedges_for_heading_plot(x, y, color, orientation, size_radius=0.1, size_
     return pc
 
 def plot_arrowhead_trajectory(x, y, color='black', arrow_length=0.05, arrow_angle=30, ax=None, linewidth=1):
+
+    # ignore nans
+    x = x[~np.isnan(x)]
+    y = y[~np.isnan(y)]
+
     xvel = pynumdiff.finite_difference.second_order(x, 1)[1]
     yvel = pynumdiff.finite_difference.second_order(y, 1)[1]
     orientations = np.arctan2(yvel, xvel)
@@ -584,6 +589,9 @@ def plot_arrowhead_trajectory(x, y, color='black', arrow_length=0.05, arrow_angl
         ax.set_aspect('equal')
         
     ax.plot(x,y, color=color, linewidth=linewidth)
+
+    np.isnan(x)==False
+
     wedge = get_wedges_for_heading_plot([x[-1],],[y[-1],], color, [last_orientation*180/np.pi,], 
                                         size_radius=arrow_length, size_angle=arrow_angle)
     ax.add_collection(wedge)
