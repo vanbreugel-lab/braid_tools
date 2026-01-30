@@ -62,7 +62,6 @@ def get_filename(path, contains, does_not_contain=['~', '.pyc']):
 
 def get_pandas_dataframe_from_uncooperative_hdf5(filename, key='first_key'):
     '''
-
     '''
     f = h5py.File(filename,'r')
     all_keys = list(f.keys())
@@ -72,7 +71,17 @@ def get_pandas_dataframe_from_uncooperative_hdf5(filename, key='first_key'):
             print(all_keys)
             print('WARNING: loading first key only')
         key = all_keys[0]
-    data = f[key][()]
+    
+    group = f[key]
+    
+    # If it's a group, get the first dataset inside it
+    if isinstance(group, h5py.Group):
+        dataset_key = list(group.keys())[0]
+        data = group[dataset_key][()]
+    else:
+        # It's already a dataset
+        data = group[()]
+    
     dic = {}
     for column_label in data.dtype.fields.keys():
         dic.setdefault(column_label, data[column_label])
