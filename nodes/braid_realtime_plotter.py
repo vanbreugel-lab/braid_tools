@@ -70,9 +70,10 @@ class RealTimePlotter:
             if len(packet.objects) > 0:
                 obj = packet.objects[0]
                 #for obj in packet.objects:
-                self.x_vec.append(obj.position.x)
-                self.y_vec.append(obj.position.y)
-                self.z_vec.append(obj.position.z)
+                if isinstance(obj.position.x, float) and isinstance(obj.position.y, float) and isinstance(obj.position.z, float):
+                    self.x_vec.append(obj.position.x)
+                    self.y_vec.append(obj.position.y)
+                    self.z_vec.append(obj.position.z)
                 if len(packet.objects) > 1:
                     print('WARNING: only plotting first object! More than 1 object not implemented')
 
@@ -85,17 +86,17 @@ class RealTimePlotter:
             self.z_vec = self.z_vec[-1 * self.tail:]
 
             # update the line
-            self.line.set_xdata(self.x_vec)
-            self.line.set_ydata(self.y_vec)  # update the data
-            self.line.set_3d_properties(self.z_vec)
+            self.line.set_xdata(np.array(self.x_vec))
+            self.line.set_ydata(np.array(self.y_vec))  # update the data
+            self.line.set_3d_properties(np.array(self.z_vec))
 
             return self.line,
 
         # Init only required for blitting to give a clean slate.
         def init():
-            self.line.set_xdata(self.x_vec)
-            self.line.set_ydata(self.y_vec)  # update the data
-            self.line.set_3d_properties(self.z_vec)
+            self.line.set_xdata(np.array(self.x_vec))
+            self.line.set_ydata(np.array(self.y_vec))  # update the data
+            self.line.set_3d_properties(np.array(self.z_vec))
             return self.line,
 
         self.ani = animation.FuncAnimation(self.fig, animate, None, init_func=init,
