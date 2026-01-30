@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-def get_long_obj_ids_fast_pandas(df_3d, obj_id_key='obj_id_unique', length=30):
+def get_long_obj_ids_fast_pandas(df_3d, obj_id_key='obj_id', length=30):
     '''
     Use fancy pandas stuff to get a list of the object id numbers that are longer than the given length (in frames)
 
@@ -16,6 +16,8 @@ def get_long_obj_ids_fast_pandas(df_3d, obj_id_key='obj_id_unique', length=30):
     obj_ids  ------- (list) of object id numbers
 
     '''
+    if 'obj_id_unique' in df_3d.keys() and obj_id_key=='obj_id':
+        raise Warning("Using obj_id, but you might want to use obj_id_unique. If so, specify kwarg obj_id_key='obj_id'")
     try:
         number_frames_per_obj_id = df_3d[["frame", obj_id_key]].groupby(by=[obj_id_key]).agg(["count"])
         obj_ids = number_frames_per_obj_id[  number_frames_per_obj_id[('frame', 'count')]  >  length  ].index.values
@@ -59,7 +61,7 @@ def get_middle_of_tunnel_obj_ids_fast_pandas(df_3d, zmin=0.1, zmax=0.4, ymin=-0.
     
     return obj_ids
 
-def get_trajectories_that_travel_far(df_3d, xdist_travelled=0.1):
+def get_trajectories_that_travel_far(df_3d, obj_id_key='obj_id', xdist_travelled=0.1):
     '''
     Use fancy pandas stuff to get a list of the object id numbers where the xdistance travelled is large
 
@@ -73,7 +75,8 @@ def get_trajectories_that_travel_far(df_3d, xdist_travelled=0.1):
     obj_ids  ------- (list) of object id numbers
 
     '''
-
+    if 'obj_id_unique' in df_3d.keys() and obj_id_key=='obj_id':
+        raise Warning("Using obj_id, but you might want to use obj_id_unique. If so, specify kwarg obj_id_key='obj_id'")
     min_x = df_3d[["frame", "obj_id", "x"]].groupby(by=["obj_id"]).agg(["min"])
     max_x = df_3d[["frame", "obj_id", "x"]].groupby(by=["obj_id"]).agg(["max"])
     s = max_x[(    'x', 'max')][np.abs((max_x[(    'x', 'max')] - min_x[(    'x', 'min')]))>xdist_travelled]
@@ -107,6 +110,8 @@ def get_obj_ids_that_stay_in_volume(df_3d, obj_id_key='obj_id', zmin=0.1, zmax=0
     obj_ids  ------- (list) of object id numbers
 
     '''
+    if 'obj_id_unique' in df_3d.keys() and obj_id_key=='obj_id':
+        raise Warning("Using obj_id, but you might want to use obj_id_unique. If so, specify kwarg obj_id_key='obj_id'")
 
     min_z = df_3d[[obj_id_key, "z"]].groupby(by=[obj_id_key]).agg(["min"])
     obj_ids = min_z['z'][(min_z['z']['min'] > zmin)==True].index.values
