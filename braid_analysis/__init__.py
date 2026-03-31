@@ -2,3 +2,4 @@ from braid_analysis import braid_slicing
 from braid_analysis import braid_filemanager
 from braid_analysis import braid_analysis_plots
 from braid_analysis import flymath
+from braid_analysis import braid_2d_analysis
