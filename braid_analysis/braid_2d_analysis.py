@@ -18,6 +18,7 @@ Typical workflow
 """
 
 import os
+import re
 import zipfile
 import xml.etree.ElementTree as ET
 
@@ -28,6 +29,12 @@ import yaml
 import h5py
 
 from braid_analysis import braid_filemanager
+
+_ANSI_ESCAPE = re.compile(r'\x1b\[[0-9;]*m')
+
+def get_filename(data_folder, extension):
+    """Wrapper around braid_filemanager.get_filename that strips ANSI color codes."""
+    return _ANSI_ESCAPE.sub('', braid_filemanager.get_filename(data_folder, extension)).strip()
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -83,7 +90,7 @@ def load_triggers(data_folder, exp_code):
     trigger_column_names = exp_code['column_names']
     topic = exp_code.get('topic', 'braid_trigger_topic')
 
-    hdf5_filename = braid_filemanager.get_filename(data_folder, '.hdf5')
+    hdf5_filename = get_filename(data_folder, '.hdf5')
     with h5py.File(hdf5_filename, 'r') as f:
         ds = f[topic]
         df = pd.DataFrame(ds[:])
