@@ -875,6 +875,129 @@ def plot_2d_correspondence_histograms(corr_times, camn_to_id, window_s,
     plt.show()
 
 
+def load_trigger_checker(data_folder, df_3d):
+    """Load the trigger logic from trigger_node.py and return a per-object checker.
+
+    Reads ``trigger_node.py`` and its associated YAML config from
+    ``data_folder/exp_code/``, then builds a closure that replicates the
+    per-object checks inside ``trigger_callback``:
+
+    * minimum trajectory age (``min_trajec_length``)
+    * position within the trigger volume (xmin/xmax, ymin/ymax, zmin/zmax)
+    * velocity within the allowed range (vel_xmin/vel_xmax, …)
+
+    The refractory-period check is intentionally excluded because it depends
+    on the global ordering of events across the whole session, which is not
+    meaningful when replaying individual frames in isolation.
+
+    Parameters
+    ----------
+    data_folder : str
+        Experiment directory containing an ``exp_code/`` subdirectory with one
+        ``trigger_node.py`` and one ``.yaml`` config file.
+    df_3d : pandas.DataFrame
+        Full 3D Kalman-filter dataframe with columns ``obj_id``, ``frame``,
+        ``timestamp``, ``x``, ``y``, ``z``, ``xvel``, ``yvel``, ``zvel``.
+
+    Returns
+    -------
+    check : callable
+        ``check(obj_id, frame) -> bool`` — returns ``True`` if the object
+        passes all trigger conditions at that frame.
+    config : dict
+        The parsed YAML config (useful for inspecting thresholds).
+    """
+    import ast
+
+    exp_code_dir = os.path.join(data_folder, 'exp_code')
+
+    # Locate the trigger node: any .py file in exp_code that defines trigger_callback
+    py_files = [f for f in os.listdir(exp_code_dir) if f.endswith('.py')]
+    trigger_node_path = None
+    for py_file in py_files:
+        path = os.path.join(exp_code_dir, py_file)
+        with open(path) as fh:
+            src = fh.read()
+        if 'trigger_callback' in src:
+            trigger_node_path = path
+            trigger_src = src
+            break
+    if trigger_node_path is None:
+        raise FileNotFoundError(
+            f'No .py file with trigger_callback found in {exp_code_dir}. '
+            f'Files found: {py_files}')
+    print(f'Trigger node: {os.path.basename(trigger_node_path)}')
+
+    # Parse the source and collect all self.config[...] keys used in trigger_callback
+    tree = ast.parse(trigger_src)
+    config_keys_used = set()
+    for node in ast.walk(tree):
+        if (isinstance(node, ast.FunctionDef) and node.name == 'trigger_callback'):
+            for child in ast.walk(node):
+                if (isinstance(child, ast.Subscript) and
+                        isinstance(child.value, ast.Attribute) and
+                        child.value.attr == 'config'):
+                    key_node = child.slice
+                    # ast.Index wrapper in Python < 3.9
+                    if isinstance(key_node, ast.Index):
+                        key_node = key_node.value
+                    if isinstance(key_node, ast.Constant):
+                        config_keys_used.add(key_node.value)
+    print(f'trigger_node.py config keys used in trigger_callback: {sorted(config_keys_used)}')
+
+    # Load the YAML config
+    yaml_files = [f for f in os.listdir(exp_code_dir) if f.endswith('.yaml') or f.endswith('.yml')]
+    if not yaml_files:
+        raise FileNotFoundError(f'No YAML config found in {exp_code_dir}')
+    config_path = os.path.join(exp_code_dir, yaml_files[0])
+    with open(config_path) as fh:
+        config = yaml.safe_load(fh)
+    print(f'Config loaded: {config_path}')
+
+    # Precompute birth timestamp per obj_id (first timestamp seen)
+    birth_timestamps = df_3d.groupby('obj_id')['timestamp'].min()
+
+    # Build a fast lookup: (frame, obj_id) -> row Series
+    df_indexed = df_3d.set_index(['frame', 'obj_id'])
+
+    def check(obj_id, frame):
+        """Return True if obj_id at frame passes all trigger_callback conditions."""
+        try:
+            row = df_indexed.loc[(frame, obj_id)]
+        except KeyError:
+            return False
+        if isinstance(row, pd.DataFrame):
+            row = row.iloc[0]
+
+        # Birth time check (min_trajec_length)
+        if 'min_trajec_length' in config_keys_used and 'min_trajec_length' in config:
+            if obj_id not in birth_timestamps.index:
+                return False
+            age = row['timestamp'] - birth_timestamps[obj_id]
+            if age < config['min_trajec_length']:
+                return False
+
+        # Position bounds
+        for col, lo_key, hi_key in [('x', 'xmin', 'xmax'),
+                                     ('y', 'ymin', 'ymax'),
+                                     ('z', 'zmin', 'zmax')]:
+            if lo_key in config_keys_used:
+                if not (config[lo_key] < row[col] < config[hi_key]):
+                    return False
+
+        # Velocity bounds
+        for col, lo_key, hi_key in [('xvel', 'vel_xmin', 'vel_xmax'),
+                                     ('yvel', 'vel_ymin', 'vel_ymax'),
+                                     ('zvel', 'vel_zmin', 'vel_zmax')]:
+            if lo_key in config_keys_used:
+                if not (config[lo_key] < row[col] < config[hi_key]):
+                    return False
+
+        return True
+
+    return check, config
+
+
 def plot_2d_pixel_locations(corr_pixels, camn_to_id, ncols=3,
                              alpha=0.1, point_size=2):
     """Plot 2D pixel locations of trajectory correspondences, one panel per camera.
