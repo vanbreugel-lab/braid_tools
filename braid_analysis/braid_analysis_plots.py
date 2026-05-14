@@ -8,6 +8,11 @@ from matplotlib.collections import PatchCollection
 
 from braid_analysis import flymath
 
+import matplotlib.colors as mcolors
+import matplotlib.cm as mcm
+from shapely.geometry import MultiPoint, Point
+from shapely.ops import unary_union
+
 def plot_3d_trajectory(df_3d, 
                        obj_ids=None,
                        frame_range=None,
@@ -595,3 +600,354 @@ def plot_arrowhead_trajectory(x, y, color='black', arrow_length=0.05, arrow_angl
     wedge = get_wedges_for_heading_plot([x[-1],],[y[-1],], color, [last_orientation*180/np.pi,], 
                                         size_radius=arrow_length, size_angle=arrow_angle)
     ax.add_collection(wedge)
+
+
+def make_lights_time_cmap(lights_on, time):
+    """
+    Build a colormap and feature array that encode two experimental conditions:
+
+    - ``time < 0``              → gray   (pre-stimulus baseline)
+    - ``lights_on != 0``        → red    (lights-on period)
+    - ``lights_on == 0, time >= 0`` → black  (lights-off, post-stimulus)
+
+    The returned ``color_feature`` is an integer array with three sentinel
+    values (0, 1, 2) that index into a ``ListedColormap``.  Pass both outputs
+    directly to ``plot_arrowhead_trajectory_scaled`` via the ``cmap`` and
+    ``color_feature`` arguments.
+
+    Parameters
+    ----------
+    lights_on : array-like
+        Per-point indicator of whether the lights are on (non-zero = on).
+    time : array-like
+        Per-point time values; negative values indicate the pre-stimulus period.
+
+    Returns
+    -------
+    cmap : matplotlib.colors.ListedColormap
+    color_feature : np.ndarray of int
+        Integer array (same length as inputs) with values in {0, 1, 2}.
+    """
+    lights_on = np.asarray(lights_on)
+    time      = np.asarray(time)
+
+    if lights_on.shape != time.shape:
+        raise ValueError("`lights_on` and `time` must have the same shape.")
+
+    # Sentinel values: 0 = gray, 1 = red, 2 = black
+    color_feature = np.full(len(time), 2, dtype=int)   # default: black
+    color_feature[time < 0]       = 0                  # gray (overrides black)
+    color_feature[lights_on != 0] = 1                  # red  (overrides gray/black)
+
+    cmap = mcolors.ListedColormap(['gray', 'red', 'black'])
+
+    return cmap, color_feature
+
+
+def plot_arrowhead_trajectory_scaled(x, y, color='black', arrow_length=0.05, arrow_angle=30,
+                                     ax=None, linewidth=1, scale_bar=False, units='',
+                                     flow_direction=None, fontsize=5,
+                                     flow_arrow_length=0.05, flow_arrow_angle=30,
+                                     flow_arrow_size=0.08, padding=0.2,
+                                     flow_column_width=0.2,
+                                     color_feature=None, cmap=None,
+                                     color_feature_min=None, color_feature_max=None,
+                                     n_segments=None, rasterized=False):
+    """
+    Plot a trajectory with arrowheads, with optional per-point colormap coloring.
+
+    Parameters
+    ----------
+    x, y : array-like
+        Trajectory coordinates.
+    color : str or color
+        Fallback solid color when `cmap` / `feature` are not provided.
+    color_feature : array-like, optional
+        Scalar values (same length as x/y) used to color the trajectory via `cmap`.
+        Typical choices: time index, speed, a sensor reading, etc.
+    cmap : str or Colormap, optional
+        A matplotlib colormap name (e.g. ``'viridis'``) or Colormap object.
+        Required when `color_feature` is supplied; ignored otherwise.
+    color_feature_min, color_feature_max : float, optional
+        Clipping / normalisation bounds for `color_feature`.  Defaults to the data
+        min / max when not provided.
+    n_segments : int, optional
+        Number of uniformly-coloured segments used to approximate the
+        continuous colormap along the trajectory.  Defaults to
+        ``max(50, len(x) // 4)``.  Finer values give smoother colour gradients
+        but add more artists to the axes.
+    arrow_length, arrow_angle, ax, linewidth, scale_bar, units,
+    flow_direction, fontsize, flow_arrow_length, flow_arrow_angle,
+    flow_arrow_size, padding, flow_column_width
+        Same as before.
+    """
+
+    # ------------------------------------------------------------------ #
+    # Resolve colormap mode vs solid-color mode
+    # ------------------------------------------------------------------ #
+    use_cmap = (color_feature is not None) and (cmap is not None)
+
+    if use_cmap:
+        color_feature = np.asarray(color_feature, dtype=float)
+        if len(color_feature) != len(x):
+            raise ValueError("`color_feature` must have the same length as `x` and `y`.")
+
+        cmap_obj = mcm.get_cmap(cmap) if isinstance(cmap, str) else cmap
+        f_min = color_feature_min if color_feature_min is not None else np.nanmin(color_feature)
+        f_max = color_feature_max if color_feature_max is not None else np.nanmax(color_feature)
+        norm  = mcolors.Normalize(vmin=f_min, vmax=f_max)
+
+        if n_segments is None:
+            n_segments = max(50, len(x) // 4)
+
+    has_flow = flow_direction is not None and flow_arrow_length is not None
+
+    # ------------------------------------------------------------------ #
+    # Physical axis size → coordinate space
+    # ------------------------------------------------------------------ #
+    ax.figure.canvas.draw()
+    bbox = ax.get_window_extent().transformed(ax.figure.dpi_scale_trans.inverted())
+    ax_width_in  = bbox.width
+    ax_height_in = bbox.height
+
+    coord_width  = ax_width_in
+    coord_height = ax_height_in
+
+    flow_col  = flow_column_width * coord_width if has_flow else 0.0
+    left_x_min = padding * coord_width
+    left_x_max = coord_width - flow_col - padding * coord_width
+    y_min_pad  = padding * coord_height
+    y_max_pad  = coord_height - padding * coord_height
+
+    # Scale trajectory
+    x_norm = (x - np.nanmin(x)) / (np.nanmax(x) - np.nanmin(x))
+    y_norm = (y - np.nanmin(y)) / (np.nanmax(y) - np.nanmin(y))
+    x_scaled = x_norm * (left_x_max - left_x_min) + left_x_min
+    y_scaled = y_norm * (y_max_pad  - y_min_pad)  + y_min_pad
+
+    ax.set_xlim(0, coord_width)
+    ax.set_ylim(0, coord_height)
+    ax.set_aspect('equal')
+
+    # ------------------------------------------------------------------ #
+    # Draw trajectory
+    # ------------------------------------------------------------------ #
+    if use_cmap:
+        # Interpolate trajectory and feature onto a uniform index grid so that
+        # segments have consistent arc-length regardless of the original
+        # sampling density.
+        idx_orig = np.arange(len(x_scaled), dtype=float)
+        idx_fine = np.linspace(0, len(x_scaled) - 1, n_segments + 1)
+        xs_fine  = np.interp(idx_fine, idx_orig, x_scaled)
+        ys_fine  = np.interp(idx_fine, idx_orig, y_scaled)
+        feat_fine = np.interp(idx_fine, idx_orig, color_feature)
+
+        # Draw each segment with the colour of its midpoint feature value.
+        # We call plot_arrowhead_trajectory only on the last segment so that
+        # a single arrowhead appears at the trajectory's tip.
+        for i in range(n_segments):
+            seg_x = xs_fine[i : i + 2]
+            seg_y = ys_fine[i : i + 2]
+            mid_feat = (feat_fine[i] + feat_fine[i + 1]) / 2.0
+            seg_color = cmap_obj(norm(mid_feat))
+
+            if i < n_segments - 1:
+                ax.plot(seg_x, seg_y, color=seg_color, linewidth=linewidth,
+                        solid_capstyle='round', rasterized=rasterized)
+            else:
+                # Last segment — use plot_arrowhead_trajectory for the tip arrowhead.
+                # Pass a few extra points so the arrowhead direction is stable.
+                tip_x = xs_fine[max(0, i - 1) :]
+                tip_y = ys_fine[max(0, i - 1) :]
+                _artists_before = set(ax.lines + ax.patches + list(ax.collections))
+                plot_arrowhead_trajectory(
+                    tip_x, tip_y,
+                    color=seg_color,
+                    arrow_length=arrow_length,
+                    arrow_angle=arrow_angle,
+                    ax=ax,
+                    linewidth=linewidth,
+                )
+                if rasterized:
+                    for _a in set(ax.lines + ax.patches + list(ax.collections)) - _artists_before:
+                        _a.set_rasterized(True)
+    else:
+        _artists_before = set(ax.lines + ax.patches + list(ax.collections))
+        plot_arrowhead_trajectory(
+            x_scaled, y_scaled,
+            color=color,
+            arrow_length=arrow_length,
+            arrow_angle=arrow_angle,
+            ax=ax,
+            linewidth=linewidth,
+        )
+        if rasterized:
+            for _a in set(ax.lines + ax.patches + list(ax.collections)) - _artists_before:
+                _a.set_rasterized(True)
+
+    for collection in ax.collections:
+        collection.set_clip_on(False)
+
+    # ------------------------------------------------------------------ #
+    # Re-read limits after set_aspect
+    # ------------------------------------------------------------------ #
+    ax.figure.canvas.draw()
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+    x_extent_ax = xlim[1] - xlim[0]
+    y_extent_ax = ylim[1] - ylim[0]
+
+    label_gap = 0.03 * y_extent_ax
+    offset_x  = 0.02 * x_extent_ax
+
+    right_x_min = coord_width - flow_col
+    right_x_max = coord_width
+
+    traj_hull    = MultiPoint(list(zip(x_scaled, y_scaled))).convex_hull.buffer(offset_x * 2)
+    occupied_geom = traj_hull
+
+    def find_best_position(size, occupied, x_min, x_max, y_min, y_max):
+        n = 30
+        xs_grid = np.linspace(x_min + size, x_max - size, n)
+        ys_grid = np.linspace(y_min + size, y_max - size, n)
+        best_pt, best_dist = None, -1
+        for cx_ in xs_grid:
+            for cy_ in ys_grid:
+                pt = Point(cx_, cy_)
+                d = pt.distance(occupied) if not occupied.is_empty else 1e9
+                box_fits = (cx_ - size > x_min and cx_ + size < x_max and
+                            cy_ - size > y_min and cy_ + size < y_max)
+                if box_fits and d > best_dist:
+                    best_dist = d
+                    best_pt = (cx_, cy_)
+        return best_pt
+
+    # ------------------------------------------------------------------ #
+    # Scale bar
+    # ------------------------------------------------------------------ #
+    if scale_bar:
+        x_extent_original = np.nanmax(x) - np.nanmin(x)
+        max_bar_original   = 0.3 * x_extent_original
+        magnitude          = 10 ** np.floor(np.log10(max_bar_original))
+        nice_steps         = [1, 2, 5]
+        bar_size_original  = magnitude
+        for step in nice_steps:
+            candidate = step * magnitude
+            if candidate <= max_bar_original:
+                bar_size_original = candidate
+
+        scale_factor   = (left_x_max - left_x_min) / x_extent_original
+        bar_size_scaled = bar_size_original * scale_factor
+        bar_half        = bar_size_scaled / 2
+
+        pos = find_best_position(max(bar_half, label_gap * 2), occupied_geom,
+                                 xlim[0], right_x_min, ylim[0], ylim[1])
+        if pos is not None:
+            cx, cy = pos
+            bar_x_start = cx - bar_half
+            bar_x_end   = cx + bar_half
+
+            if cy < (ylim[0] + ylim[1]) / 2:
+                text_y, va = cy + label_gap, 'bottom'
+            else:
+                text_y, va = cy - label_gap, 'top'
+
+            ax.plot([bar_x_start, bar_x_end], [cy, cy],
+                    color=color, linewidth=0.5)
+            ax.text(cx, text_y, f'{bar_size_original:g} {units}',
+                    ha='center', va=va, fontsize=fontsize, color=color)
+
+            bar_geom = MultiPoint([
+                (bar_x_start, cy), (bar_x_end, cy), (cx, text_y)
+            ]).convex_hull.buffer(label_gap * 2)
+            occupied_geom = unary_union([occupied_geom, bar_geom])
+
+    # ------------------------------------------------------------------ #
+    # Flow direction arrow
+    # ------------------------------------------------------------------ #
+    if has_flow:
+        arrow_size_scaled = flow_arrow_size * x_extent_ax
+
+        cx = (right_x_min + right_x_max) / 2
+        cy = (ylim[0] + ylim[1]) / 2
+
+        dx = np.cos(flow_direction) * arrow_size_scaled / 2
+        dy = np.sin(flow_direction) * arrow_size_scaled / 2
+
+        n_points = 10
+        t = np.linspace(-0.5, 0.5, n_points)
+        arrow_x = cx + t * dx * 2
+        arrow_y = cy + t * dy * 2
+
+        plot_arrowhead_trajectory(
+            arrow_x, arrow_y,
+            color=color,
+            arrow_length=flow_arrow_length,
+            arrow_angle=flow_arrow_angle,
+            ax=ax,
+            linewidth=linewidth,
+        )
+
+        for collection in ax.collections:
+            collection.set_clip_on(False)
+
+        text_angle_deg = np.degrees(flow_direction)
+        if 90 < text_angle_deg % 360 < 270:
+            text_angle_deg += 180
+
+        perp_dx = -np.sin(flow_direction) * label_gap * 3
+        perp_dy =  np.cos(flow_direction) * label_gap * 3
+        cx_mid  = (right_x_min + right_x_max) / 2
+        cy_mid  = (ylim[0] + ylim[1]) / 2
+        if (cx + perp_dx - cx_mid)**2 + (cy + perp_dy - cy_mid)**2 < \
+           (cx - perp_dx - cx_mid)**2 + (cy - perp_dy - cy_mid)**2:
+            perp_dx, perp_dy = -perp_dx, -perp_dy
+
+        ax.text(cx + perp_dx, cy + perp_dy, 'flow',
+                ha='center', va='center', fontsize=fontsize, color=color,
+                rotation=text_angle_deg, rotation_mode='anchor')
+
+def make_trajectory_plot_page(braid_df, 
+                              n_col = 8,
+                              n_row = 10,
+                              starting_objid_ix = 0,
+                              fig_width=8,
+                              fig_height=10,
+                              show_obj_id=True):
+    '''
+    Function for plotting lots of trajectories nicely on a page -- useful for picking a good demo trajectory.
+    This function is quite slow because it uses plot_arrowhead_trajectory_scaled.
+
+    If you want to view a new set of trajectories, run the same function with starting_objid_ix set to where the last page left off.
+    '''
+
+    fig = plt.figure(figsize=(fig_width,fig_height))
+    
+    for i in range(starting_objid_ix, starting_objid_ix + n_col*n_row):
+        ax = fig.add_subplot(n_row, n_col, i-starting_objid_ix+1)
+        
+        # get a single trajectory
+        obj_id_key = 'obj_id_unique_event'
+        if i < len(braid_df[obj_id_key].unique()):
+            obj_id = braid_df[obj_id_key].unique()[i] # << 36 is a good demo, 40 is beautiful, 41 is nice
+            trajec = braid_df[braid_df[obj_id_key]==obj_id]
+            trajec = trajec.dropna()
+        
+            x_pos = trajec.x.values
+            y_pos = trajec.y.values
+            cmap, color_feature = make_lights_time_cmap(trajec.lights_on, trajec.time_relative_to_flash)
+            plot_arrowhead_trajectory_scaled(x_pos, y_pos, color='black', arrow_length=0.1, arrow_angle=30,
+                                             ax=ax, linewidth=0.75, scale_bar=True, units='m', fontsize=6, 
+                                             padding=0.05,
+                                             flow_direction=None, flow_column_width=0,
+                                             cmap=cmap,
+                                             color_feature=color_feature,
+                                             color_feature_min=0,   # pin the norm so sentinel values map correctly
+                                             color_feature_max=2,
+                                             rasterized=True)
+            ax.set_title(obj_id, fontsize=4)
+            
+        fifi.mpl_functions.adjust_spines(ax, [])
+
+    return fig
+        
