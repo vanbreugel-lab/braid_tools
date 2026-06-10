@@ -8,10 +8,14 @@ from matplotlib.collections import PatchCollection
 
 from braid_analysis import flymath
 
+import matplotlib
+import matplotlib.cm
 import matplotlib.colors as mcolors
 import matplotlib.cm as mcm
 from shapely.geometry import MultiPoint, Point
 from shapely.ops import unary_union
+
+from . import braid_slicing
 
 def plot_3d_trajectory(df_3d, 
                        obj_ids=None,
@@ -468,28 +472,61 @@ def plot_column_vs_time(df_3d,
     if return_array:
         return M.T, time_edges, column_edges
 
-def add_stimulus_shading_to_ax(ax, df_3d, stimulus_column, 
+
+def add_stimulus_shading_to_ax(ax, df_3d, stimulus_column,
                                ymax, ymin,
                                time_key='time_relative_to_flash',
                                obj_id_key='obj_id_unique_event', cmap='Reds',
                                vmin=0, vmax=1, alpha=0.3, zorder=1,
                                ):
     '''
-    Show stimulus as a gradient polygon on the provided ax. 
-    This function will find a "demo" trajectory and grab the stimulus_column key and use that to generate the shading.
-    It assumes that all trajectories in the df_3d provided have the same stimulus_column values.
-
+    Show stimulus as a gradient polygon on the provided ax.
+    White (low-value) regions are fully transparent; the colormap's saturated end
+    reaches the specified alpha. Compatible with SVG/Inkscape export — transparency
+    is baked into the colormap's RGBA values and embedded as a PNG in the SVG.
     '''
-    obj_id_demo = df_3d[obj_id_key].unique()[0]
-    trajec = df_3d[df_3d[obj_id_key]==obj_id_demo]
+
+    # Find the longest trajectory to use as the shading demo
+    df_valid = df_3d.dropna()
+    longest_trajec_seconds = (df_valid[time_key].max() - df_valid[time_key].min())
+    dt = np.median(np.diff(df_valid[time_key]))
+    longest_trajec_frames = int(longest_trajec_seconds / dt)
+    long_obj_ids = braid_slicing.get_long_obj_ids_fast_pandas(
+        df_valid, obj_id_key=obj_id_key, length=longest_trajec_frames
+    )
+    obj_id_demo = long_obj_ids[0]
+
+    trajec = df_3d[df_3d[obj_id_key] == obj_id_demo]
     x = trajec[time_key].values
-    polygon = ax.fill_between(x, ymin*np.ones_like(x), ymax*np.ones_like(x), lw=0, color='none')
+
+    # Build a custom colormap where alpha scales with the colormap value:
+    #   vmin end (white) → alpha=0 (fully transparent)
+    #   vmax end (saturated) → alpha=alpha_max
+    try:
+        base_cmap = matplotlib.colormaps.get_cmap(cmap)
+    except:
+        base_cmap = mcm.get_cmap(cmap)
+    cmap_rgba = base_cmap(np.linspace(0, 1, 256))        # shape (256, 4)
+    cmap_rgba[:, 3] = np.linspace(0, alpha, 256)         # overwrite alpha channel
+    transparent_cmap = mcolors.ListedColormap(cmap_rgba)
+
+    # Use fill_between only to obtain the polygon extent, not for actual rendering
+    polygon = ax.fill_between(x, ymin * np.ones_like(x), ymax * np.ones_like(x),
+                              lw=0, color='none')
     verts = np.vstack([p.vertices for p in polygon.get_paths()])
-    gradient = ax.imshow(trajec.lights_on.values.reshape(1, -1), cmap=cmap, aspect='auto',
-                         extent=[verts[:, 0].min(), verts[:, 0].max(), verts[:, 1].min(), verts[:, 1].max()], 
-                         vmin=vmin, vmax=vmax, 
-                         zorder=zorder, alpha=alpha)
-    #gradient.set_clip_path(polygon.get_paths()[0], transform=plt.gca().transData) # <<< this causes issues when writing to an svg
+
+    gradient = ax.imshow(
+        trajec[stimulus_column].values.reshape(1, -1),
+        cmap=transparent_cmap,
+        aspect='auto',
+        extent=[verts[:, 0].min(), verts[:, 0].max(),
+                verts[:, 1].min(), verts[:, 1].max()],
+        vmin=vmin, vmax=vmax,
+        zorder=zorder,
+        # Do NOT pass alpha= here — it would multiply a flat alpha on top of
+        # the per-pixel alpha already baked into the colormap
+    )
+    return gradient
 
 #############################################################################################################
 # Arrow head trajectories
