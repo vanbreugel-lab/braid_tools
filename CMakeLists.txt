@@ -1,59 +1,37 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.8)
 project(braid_tools)
 
-find_package(catkin REQUIRED COMPONENTS
-    roscpp
-    rospy
-    std_msgs
-    message_generation
-    std_msgs
-    sensor_msgs
-    geometry_msgs
-    dynamic_reconfigure
-    message_generation
-)
+find_package(ament_cmake REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(builtin_interfaces REQUIRED)
 
-find_package(
-    catkin
-    REQUIRED COMPONENTS
-    message_generation
-    std_msgs
-    sensor_msgs
-    geometry_msgs
-    dynamic_reconfigure
-)
-
-add_message_files(
-  FILES
-  flydra_mainbrain_packet.msg
-  flydra_mainbrain_super_packet.msg
-  flydra_object.msg
-)
-
-generate_messages(
-  DEPENDENCIES std_msgs geometry_msgs
-)
-
-catkin_package( ## if you dont add this, executables are not found
-  INCLUDE_DIRS nodes
-#  LIBRARIES pcl_tutorials
-  CATKIN_DEPENDS geometry_msgs nav_msgs pcl_msgs roscpp rospy std_msgs
-#  DEPENDS system_lib
-)
-
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
-
-install(DIRECTORY
-  launch/
-  nodes/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.launch"
-  PATTERN ".svn" EXCLUDE
+rosidl_generate_interfaces(${PROJECT_NAME}
+  msg/FlydraObject.msg
+  msg/FlydraMainbrainPacket.msg
+  msg/FlydraMainbrainSuperPacket.msg
+  DEPENDENCIES geometry_msgs builtin_interfaces
 )
 
 install(PROGRAMS
   nodes/braid_ros_listener.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  nodes/braid_emulator.py
+  nodes/braid_realtime_plotter.py
+  nodes/braid_save_data_to_hdf5.py
+  DESTINATION lib/${PROJECT_NAME}
 )
+
+install(DIRECTORY
+  launch
+  plot_config
+  DESTINATION share/${PROJECT_NAME}
+)
+
+install(FILES
+  braid_tools_mapping_rules.yaml
+  DESTINATION share/${PROJECT_NAME}
+)
+
+ament_export_dependencies(rosidl_default_runtime)
+
+ament_package()

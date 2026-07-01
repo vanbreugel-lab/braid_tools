@@ -1,0 +1,4 @@
+uint64 framenumber
+builtin_interfaces/Time reconstruction_stamp
+builtin_interfaces/Time acquire_stamp
+FlydraObject[] objects

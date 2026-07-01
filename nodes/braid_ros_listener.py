@@ -1,50 +1,58 @@
 #!/usr/bin/env python3
 """# This script listens to the HTTP JSON Event Stream of Strand Braid.
 
-Writes /flydra_mainbrain_super_packets.
-
-You probably also want the ros_flydra flydra2ros node to make pose messages.
+Writes /flydra_mainbrain/super_packets.
 """
 
-from __future__ import print_function
+import sys
 import argparse
 import requests
 import json
 import time
-import socket
 
-# from ros_flydra.msg import flydra_mainbrain_super_packet, flydra_mainbrain_packet, flydra_object
-from braid_tools.msg import flydra_mainbrain_super_packet, flydra_mainbrain_packet, flydra_object
+import rclpy
+from rclpy.node import Node
+from rclpy.utilities import remove_ros_args
+from builtin_interfaces.msg import Time
 
-import rospy
+from braid_tools.msg import FlydraMainbrainSuperPacket, FlydraMainbrainPacket, FlydraObject
 
 DATA_PREFIX = 'data: '
 
 
-class BraidProxy:
+def unix_time_to_msg(t):
+    '''Convert a float unix timestamp to a builtin_interfaces/Time message.'''
+    sec = int(t)
+    nanosec = int(round((t - sec) * 1e9))
+    if nanosec >= 1_000_000_000:
+        sec += 1
+        nanosec -= 1_000_000_000
+    return Time(sec=sec, nanosec=nanosec)
+
+
+class BraidProxy(Node):
     def __init__(self, braid_model_server_url):
+        super().__init__('braid_ros_listener')
         self.braid_model_server_url = braid_model_server_url
         self.session = requests.session()
         count = 0
         while True:
             try:
                 r = self.session.get(self.braid_model_server_url)
-                rospy.loginfo('Connected to %s' % self.braid_model_server_url)
+                self.get_logger().info('Connected to %s' % self.braid_model_server_url)
                 break
             except requests.exceptions.ConnectionError as err:
                 if count > 20:
                     raise err
-                rospy.loginfo('Sleeping because we failed to connect to server at %s' % self.braid_model_server_url)
+                self.get_logger().info('Sleeping because we failed to connect to server at %s' % self.braid_model_server_url)
                 time.sleep(1.0)
                 count += 1
         assert (r.status_code == requests.codes.ok)
 
-        self.pub = rospy.Publisher('flydra_mainbrain/super_packets',
-                                   flydra_mainbrain_super_packet, queue_size=100)
-
+        self.pub = self.create_publisher(FlydraMainbrainSuperPacket,
+                                         'flydra_mainbrain/super_packets', 100)
 
     def run(self):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         events_url = self.braid_model_server_url + 'events'
         r = self.session.get(events_url,
                              stream=True,
@@ -62,29 +70,29 @@ class BraidProxy:
             except KeyError:
                 continue
 
-            msg = flydra_mainbrain_super_packet()
-            packet = flydra_mainbrain_packet()
+            msg = FlydraMainbrainSuperPacket()
+            packet = FlydraMainbrainPacket()
 
             objects = []
 
-            obj = flydra_object()
-            obj.obj_id = update_dict['obj_id']
-            obj.position.x = update_dict['x']
-            obj.position.y = update_dict['y']
-            obj.position.z = update_dict['z']
-            obj.velocity.x = update_dict['xvel']
-            obj.velocity.y = update_dict['yvel']
-            obj.velocity.z = update_dict['zvel']
-            obj.posvel_covariance_diagonal = [update_dict['P%d%d' % (i, i)] for i in range(6)]
+            obj = FlydraObject()
+            obj.obj_id = int(update_dict['obj_id'])
+            obj.position.x = float(update_dict['x'])
+            obj.position.y = float(update_dict['y'])
+            obj.position.z = float(update_dict['z'])
+            obj.velocity.x = float(update_dict['xvel'])
+            obj.velocity.y = float(update_dict['yvel'])
+            obj.velocity.z = float(update_dict['zvel'])
+            obj.posvel_covariance_diagonal = [float(update_dict['P%d%d' % (i, i)]) for i in range(6)]
             objects.append(obj)
 
-            packet.framenumber = update_dict['frame']
-            packet.reconstruction_stamp = rospy.get_rostime()
+            packet.framenumber = int(update_dict['frame'])
+            packet.reconstruction_stamp = self.get_clock().now().to_msg()
             timestamp = data['trigger_timestamp']
             if timestamp is None:
-                rospy.loginfo('Skipping data transmission due to missing timestamp')
+                self.get_logger().info('Skipping data transmission due to missing timestamp')
                 continue
-            packet.acquire_stamp = rospy.Time.from_sec(timestamp)
+            packet.acquire_stamp = unix_time_to_msg(timestamp)
             packet.objects = objects
 
             msg.packets = [packet]
@@ -104,16 +112,19 @@ def parse_chunk(chunk):
 
 def main():
     parser = argparse.ArgumentParser()
-
-    #parser.add_argument("--braid-model-server-url", default='http://0.0.0.0:8397/',
     parser.add_argument("--braid-model-server-url", default='http://134.197.37.229:8397/',
                         help="URL of Braid model server")
+    args = parser.parse_args(remove_ros_args(sys.argv)[1:])
 
-    argv = rospy.myargv()
-    args = parser.parse_args(argv[1:])
-
-    rospy.init_node('braid_ros_listener', disable_signals=True)
-    BraidProxy(args.braid_model_server_url).run()
+    rclpy.init()
+    node = BraidProxy(args.braid_model_server_url)
+    try:
+        node.run()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.destroy_node()
+        rclpy.try_shutdown()
 
 
 if __name__ == '__main__':

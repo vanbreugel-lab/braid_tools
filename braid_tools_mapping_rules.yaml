@@ -1,0 +1,20 @@
+# ros1_bridge mapping rules for braid_tools custom messages.
+# Needed because ROS 2 requires CamelCase message names, so the message
+# names differ between the ros1 (main) and ros2 branches of this package.
+# Field names are identical on both sides and map automatically
+# (including ROS 1 `time` <-> builtin_interfaces/Time).
+-
+  ros1_package_name: 'braid_tools'
+  ros1_message_name: 'flydra_object'
+  ros2_package_name: 'braid_tools'
+  ros2_message_name: 'FlydraObject'
+-
+  ros1_package_name: 'braid_tools'
+  ros1_message_name: 'flydra_mainbrain_packet'
+  ros2_package_name: 'braid_tools'
+  ros2_message_name: 'FlydraMainbrainPacket'
+-
+  ros1_package_name: 'braid_tools'
+  ros1_message_name: 'flydra_mainbrain_super_packet'
+  ros2_package_name: 'braid_tools'
+  ros2_message_name: 'FlydraMainbrainSuperPacket'

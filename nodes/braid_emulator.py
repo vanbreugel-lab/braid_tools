@@ -1,32 +1,24 @@
 #!/usr/bin/env python3
 """
 This script emulates braid to create fake flydra_mainbrain_super_packets
-
-Depends on:
-https://github.com/strawlab/ros_flydra
-https://github.com/florisvb/PyNumDiff
-
 """
 
-import time
+import sys
+import argparse
 import numpy as np
-from optparse import OptionParser
 
-import roslib
-roslib.load_manifest('geometry_msgs')
-roslib.load_manifest('std_msgs')
-from geometry_msgs.msg import Pose, Quaternion
-from std_msgs.msg import UInt32, Float32
-#roslib.load_manifest('ros_flydra')
-# from ros_flydra.msg import flydra_mainbrain_super_packet, flydra_mainbrain_packet, flydra_object
-from braid_tools.msg import flydra_mainbrain_super_packet, flydra_mainbrain_packet, flydra_object
+import rclpy
+from rclpy.node import Node
+from rclpy.utilities import remove_ros_args
 
-import rospy
+from braid_tools.msg import FlydraMainbrainSuperPacket, FlydraMainbrainPacket, FlydraObject
 
 try:
     import pynumdiff
-except:
-    raise ValueError('Install pynumdiff: pip install pynumdiff')
+    HAVE_PYNUMDIFF = True
+except ImportError:
+    # pynumdiff is pip-only; fall back to np.gradient for the synthetic trajectories
+    HAVE_PYNUMDIFF = False
 
 
 class VirtualTrajectory:
@@ -41,11 +33,11 @@ class VirtualTrajectory:
         '''
 
         self.obj_id = obj_id
-        self.length = length
+        self.length = int(length)
         self.dt = 1/float(fps)
         self.probability_of_birth = probability_of_birth
 
-        t = np.arange(0, length*self.dt, self.dt)
+        t = np.arange(0, self.length*self.dt, self.dt)
 
         if x is None:
             x = 0.5*np.sin(t)
@@ -57,16 +49,21 @@ class VirtualTrajectory:
         self.y = y
         self.z = z
 
-        _, self.xvel = pynumdiff.linear_model.savgoldiff(x, self.dt, [3, 20, 20])
-        _, self.yvel = pynumdiff.linear_model.savgoldiff(y, self.dt, [3, 20, 20])
-        _, self.zvel = pynumdiff.linear_model.savgoldiff(z, self.dt, [3, 20, 20])
+        if HAVE_PYNUMDIFF:
+            _, self.xvel = pynumdiff.linear_model.savgoldiff(x, self.dt, [3, 20, 20])
+            _, self.yvel = pynumdiff.linear_model.savgoldiff(y, self.dt, [3, 20, 20])
+            _, self.zvel = pynumdiff.linear_model.savgoldiff(z, self.dt, [3, 20, 20])
+        else:
+            self.xvel = np.gradient(x, self.dt)
+            self.yvel = np.gradient(y, self.dt)
+            self.zvel = np.gradient(z, self.dt)
 
         if P is None:
             eye = 0.1*np.eye(6)
-            P = np.repeat(eye[:, :, np.newaxis], length, axis=2)
+            P = np.repeat(eye[:, :, np.newaxis], self.length, axis=2)
         self.P = P
 
-        self.active = False 
+        self.active = False
         self.indexnumber = 0
 
     def activate(self, obj_id):
@@ -99,27 +96,28 @@ class VirtualTrajectory:
             return None
 
 
-
-
-class VirtualBraidProxy:
+class VirtualBraidProxy(Node):
     def __init__(self, virtual_trajectories, fps=100):
         '''
         virtual_trajectories -- list of instances of VirtualTrajectory
         '''
+        super().__init__('braid_emulator')
         self.fps = fps
         self.virtual_trajectories = virtual_trajectories
 
-        self.pub = rospy.Publisher('flydra_mainbrain/super_packets',
-            flydra_mainbrain_super_packet, queue_size=100)
+        self.pub = self.create_publisher(FlydraMainbrainSuperPacket,
+                                         'flydra_mainbrain/super_packets', 100)
 
         self.current_obj_id = self.virtual_trajectories[-1].obj_id # so we can spawn new trajectories
         self.framenumber = -1
 
+        self.timer = self.create_timer(1/float(fps), self.publish)
+
     def publish(self):
         self.framenumber += 1
 
-        msg = flydra_mainbrain_super_packet()
-        packet = flydra_mainbrain_packet()
+        msg = FlydraMainbrainSuperPacket()
+        packet = FlydraMainbrainPacket()
         objects = []
 
         for vtraj in self.virtual_trajectories:
@@ -131,21 +129,19 @@ class VirtualBraidProxy:
                 update_dict = vtraj.next()
 
                 if update_dict is not None:
-                    obj_id = vtraj.obj_id
-
-                    obj = flydra_object()
-                    obj.obj_id = update_dict['obj_id']
-                    obj.position.x = update_dict['x']
-                    obj.position.y = update_dict['y']
-                    obj.position.z = update_dict['z']
-                    obj.velocity.x = update_dict['xvel']
-                    obj.velocity.y = update_dict['yvel']
-                    obj.velocity.z = update_dict['zvel']
-                    obj.posvel_covariance_diagonal = [update_dict['P%d%d'%(i,i)] for i in range(6)]
+                    obj = FlydraObject()
+                    obj.obj_id = int(update_dict['obj_id'])
+                    obj.position.x = float(update_dict['x'])
+                    obj.position.y = float(update_dict['y'])
+                    obj.position.z = float(update_dict['z'])
+                    obj.velocity.x = float(update_dict['xvel'])
+                    obj.velocity.y = float(update_dict['yvel'])
+                    obj.velocity.z = float(update_dict['zvel'])
+                    obj.posvel_covariance_diagonal = [float(update_dict['P%d%d'%(i,i)]) for i in range(6)]
                     objects.append(obj)
 
         packet.framenumber = self.framenumber
-        packet.reconstruction_stamp = rospy.get_rostime()
+        packet.reconstruction_stamp = self.get_clock().now().to_msg()
         packet.acquire_stamp = packet.reconstruction_stamp
         packet.objects = objects
 
@@ -153,40 +149,46 @@ class VirtualBraidProxy:
 
         self.pub.publish(msg)
 
-    def run(self):
-        rospy.init_node('braid_emulator', anonymous=True)
-        rate = rospy.Rate(self.fps) # 10h
-        
-        while not rospy.is_shutdown():
-            self.publish()
-            rate.sleep() 
 
-if __name__ == '__main__':
-    parser = OptionParser()
-    parser.add_option("--num_trajecs", type="int", dest="num_trajecs", default=2,
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--num_trajecs", type=int, dest="num_trajecs", default=2,
                         help="Number of (potentially) simultaneous trajectories, default=2")
-    parser.add_option("--trajec_length", type="int", dest="trajec_length", default=500,
+    parser.add_argument("--trajec_length", type=int, dest="trajec_length", default=500,
                         help="Default trajectory length for first trajectory, in frames, default=500")
-    parser.add_option("--trajec_length_min", type="int", dest="trajec_length_min", default=100,
+    parser.add_argument("--trajec_length_min", type=int, dest="trajec_length_min", default=100,
                         help="Minimum trajectory length in frames, default=100")
-    parser.add_option("--trajec_length_max", type="int", dest="trajec_length_max", default=100,
+    parser.add_argument("--trajec_length_max", type=int, dest="trajec_length_max", default=800,
                         help="Maximum trajectory length in frames, default=800")
-    parser.add_option("--fps", type="int", dest="fps", default=100,
+    parser.add_argument("--fps", type=int, dest="fps", default=100,
                         help="Frames per second, default=100")
-    parser.add_option("--trajec_prob_of_birth", type="float", dest="trajec_prob_of_birth", default=0.005,
+    parser.add_argument("--trajec_prob_of_birth", type=float, dest="trajec_prob_of_birth", default=0.005,
                         help="probability that new trajectory is spawned, per frame, default=0.005")
-    (options, args) = parser.parse_args()
+    args = parser.parse_args(remove_ros_args(sys.argv)[1:])
 
-    fps = options.fps
+    fps = args.fps
 
     # first trajectory
-    virtual_trajectories = [VirtualTrajectory(1, options.trajec_length),]
+    virtual_trajectories = [VirtualTrajectory(1, args.trajec_length,
+                                              probability_of_birth=args.trajec_prob_of_birth),]
 
     # additional trajectories
-    if options.num_trajecs >= 2:
-        for i in range(1, options.num_trajecs):
-            vt = VirtualTrajectory(i+1, np.random.uniform(options.trajec_length_min, options.trajec_length_max))
+    if args.num_trajecs >= 2:
+        for i in range(1, args.num_trajecs):
+            vt = VirtualTrajectory(i+1, int(np.random.uniform(args.trajec_length_min, args.trajec_length_max)),
+                                   probability_of_birth=args.trajec_prob_of_birth)
             virtual_trajectories.append(vt)
 
+    rclpy.init()
     virtual_braid = VirtualBraidProxy(virtual_trajectories, fps=fps)
-    virtual_braid.run()
+    try:
+        rclpy.spin(virtual_braid)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        virtual_braid.destroy_node()
+        rclpy.try_shutdown()
+
+
+if __name__ == '__main__':
+    main()
