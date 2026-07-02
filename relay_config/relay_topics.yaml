@@ -1,0 +1,13 @@
+# Topics to relay from this ROS 1 machine to ROS 2 clients.
+# Message types are auto-detected from the ROS 1 master once the topic
+# is published, so only topic names are needed here.
+topics:
+  - /flydra_mainbrain/super_packets
+
+# ROS 1 type -> ROS 2 type overrides. Only needed where the ROS 2 name is
+# not simply 'pkg/msg/Name' (the braid_tools messages were renamed to
+# CamelCase for ROS 2).
+type_map:
+  braid_tools/flydra_object: braid_tools/msg/FlydraObject
+  braid_tools/flydra_mainbrain_packet: braid_tools/msg/FlydraMainbrainPacket
+  braid_tools/flydra_mainbrain_super_packet: braid_tools/msg/FlydraMainbrainSuperPacket

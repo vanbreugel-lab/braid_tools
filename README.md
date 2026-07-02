@@ -23,6 +23,13 @@ Allows you to visualize where in space tracked objects are.  Helpful for trouble
 
 ROS node for saving `flydra_mainbrain/super_packets` to an hdf5 file with buffering etc. 
 
+### topic_relay_server.py
+
+Relays a configurable list of ROS 1 topics to ROS 2 machines over HTTP (server-sent events with JSON, the same pattern Braid uses) — a lightweight alternative to ros1_bridge. The matching client (`topic_relay_client.py`) lives on the `ros2` branch of this repo. To run:
+* `rosrun braid_tools topic_relay_server.py --config $(rospack find braid_tools)/relay_config/relay_topics.yaml`
+
+Edit `relay_config/relay_topics.yaml` to choose which topics to relay; message types are auto-detected from the ROS master. Serves on port 8398 by default. Intended for telemetry-sized messages (tracking packets, triggers, floats) — do not relay images or point clouds.
+
 # Analysis
 
 From inside this directory, run `python ./setup.py install` to install the analysis tools. 

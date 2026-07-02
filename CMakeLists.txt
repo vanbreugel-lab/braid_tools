@@ -55,5 +55,6 @@ install(DIRECTORY
 
 install(PROGRAMS
   nodes/braid_ros_listener.py
+  nodes/topic_relay_server.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
