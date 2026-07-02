@@ -46,9 +46,26 @@ ROS node for saving `flydra_mainbrain/super_packets` to an hdf5 file with buffer
 
 The save directory can be given either with the `data_directory` ROS parameter (shown above) or the `--home-directory` CLI argument; defaults to `~/Desktop/temp`.
 
-# ROS 1 interoperability (bridge)
+# ROS 1 interoperability
 
-These nodes can talk to a ROS 1 system through `ros1_bridge`. The bridge itself is set up separately, but the following matter on this package's side:
+## Option 1: topic relay (recommended, simple)
+
+A lightweight relay streams ROS 1 topics to ROS 2 over HTTP the same way Braid streams tracking data — no ros1_bridge, no Docker.
+
+* **On the ROS 1 machine** (`main` branch of this repo): run the relay server with a yaml listing the topics to relay (see `relay_config/relay_topics.yaml`):
+  ```bash
+  rosrun braid_tools topic_relay_server.py --config $(rospack find braid_tools)/relay_config/relay_topics.yaml
+  ```
+* **On the ROS 2 machine** (this branch): run the client pointed at the ROS 1 machine:
+  ```bash
+  ros2 run braid_tools topic_relay_client.py --url http://ROS1.MACHINE.IP:8398/
+  ```
+
+The client needs no configuration — the server announces which topics and message types it relays, and the client republishes them under the same topic names. Message types are auto-detected on the ROS 1 side; only types whose ROS 2 name differs from `pkg/msg/Name` need an entry in the yaml's `type_map` (the braid_tools messages are pre-mapped). The client reconnects automatically if the server restarts. Intended for telemetry-sized messages (tracking packets, triggers, floats) — do not relay images or point clouds.
+
+## Option 2: ros1_bridge
+
+For full bidirectional bridging, `ros1_bridge` works but must be source-built. The following matter on this package's side:
 
 * The package name (`braid_tools`) and message field names are identical on both branches, but ROS 2 requires CamelCase message names (`flydra_object` → `FlydraObject`, etc.). The mapping is declared in `braid_tools_mapping_rules.yaml`, which is installed to the package share directory and exported for the bridge.
 * Custom messages always require a **source-built** ros1_bridge whose ROS 1 underlay includes the `main` branch build of this package and whose ROS 2 underlay includes the `ros2` branch build.

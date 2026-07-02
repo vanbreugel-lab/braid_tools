@@ -18,6 +18,7 @@ install(PROGRAMS
   nodes/braid_emulator.py
   nodes/braid_realtime_plotter.py
   nodes/braid_save_data_to_hdf5.py
+  nodes/topic_relay_client.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
