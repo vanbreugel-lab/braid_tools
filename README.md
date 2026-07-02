@@ -61,7 +61,17 @@ A lightweight relay streams ROS 1 topics to ROS 2 over HTTP the same way Braid s
   ros2 run braid_tools topic_relay_client.py --url http://ROS1.MACHINE.IP:8398/
   ```
 
-The client needs no configuration — the server announces which topics and message types it relays, and the client republishes them under the same topic names. Message types are auto-detected on the ROS 1 side; only types whose ROS 2 name differs from `pkg/msg/Name` need an entry in the yaml's `type_map` (the braid_tools messages are pre-mapped). The client reconnects automatically if the server restarts. Intended for telemetry-sized messages (tracking packets, triggers, floats) — do not relay images or point clouds.
+The client needs no configuration — the server announces which topics and message types it relays, and the client republishes them under the same topic names. Message types are auto-detected on the ROS 1 side; only types whose ROS 2 name differs from `pkg/msg/Name` need an entry in the yaml's `type_map` (the braid_tools messages are pre-mapped).
+
+How it works: the server subscribes to the configured topics and re-serves each message as JSON over an HTTP server-sent-event stream (default port 8398), the same pattern Braid uses for its tracking data. It supports multiple simultaneous clients, drops oldest messages if a client reads too slowly, and sends a heartbeat every 2 s when idle so clients can detect a dead connection. The client reconnects with exponential backoff (max 10 s) if the server restarts, and resumes publishing automatically.
+
+Limitations: every message is JSON-encoded, which is fine for telemetry-sized data (tracking packets, triggers, floats) but unsuitable for images or point clouds. One direction only: ROS 1 → ROS 2.
+
+**Smoke test.** On the ROS 1 machine, with the server running:
+```bash
+curl -N http://localhost:8398/events
+```
+You should see a `ros1_relay_hello` event listing the relayed topics, then a stream of `ros1_relay` events while data flows (or `ros1_relay_heartbeat` events every 2 s if nothing is publishing). On the ROS 2 machine, `ros2 topic list` should show the relayed topics shortly after the client connects, and `ros2 topic hz /flydra_mainbrain/super_packets` should match the rate seen by `rostopic hz` on the ROS 1 side.
 
 ## Option 2: ros1_bridge
 
