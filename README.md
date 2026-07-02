@@ -28,7 +28,17 @@ ROS node for saving `flydra_mainbrain/super_packets` to an hdf5 file with buffer
 Relays a configurable list of ROS 1 topics to ROS 2 machines over HTTP (server-sent events with JSON, the same pattern Braid uses) — a lightweight alternative to ros1_bridge. The matching client (`topic_relay_client.py`) lives on the `ros2` branch of this repo. To run:
 * `rosrun braid_tools topic_relay_server.py --config $(rospack find braid_tools)/relay_config/relay_topics.yaml`
 
-Edit `relay_config/relay_topics.yaml` to choose which topics to relay; message types are auto-detected from the ROS master. Serves on port 8398 by default. Intended for telemetry-sized messages (tracking packets, triggers, floats) — do not relay images or point clouds.
+Edit `relay_config/relay_topics.yaml` to choose which topics to relay; message types are auto-detected from the ROS master. Types whose ROS 2 name differs from `pkg/msg/Name` need an entry in the yaml's `type_map` (the braid_tools messages are pre-mapped). Serves on port 8398 by default; supports multiple simultaneous clients, drops oldest messages if a client reads too slowly, and sends a heartbeat every 2 s when idle. Runs with `rosrun` or bare `python3` — no catkin rebuild needed. Intended for telemetry-sized messages (tracking packets, triggers, floats) — do not relay images or point clouds. One direction only: ROS 1 → ROS 2.
+
+**Smoke test** (on this machine, with the server running):
+```bash
+curl -N http://localhost:8398/events
+```
+You should see a `ros1_relay_hello` event listing the relayed topics, then a stream of `ros1_relay` events while data flows (or `ros1_relay_heartbeat` events every 2 s if nothing is publishing). Then on the ROS 2 machine:
+```bash
+ros2 run braid_tools topic_relay_client.py --url http://THIS.MACHINE.IP:8398/
+ros2 topic hz /flydra_mainbrain/super_packets   # should match rostopic hz here
+```
 
 # Analysis
 
