@@ -1,0 +1,322 @@
+<multi_camera_reconstructor>
+    <single_camera_calibration>
+      <cam_id>Basler-40196688</cam_id>
+      <calibration_matrix>-431.93257919448968 1590.8750583918677 -1202.5559013445475 1501.1634367664294; 1731.2964030692297 -30.203551854744234 -910.24010681708342 -295.83976650895391; -0.18074225281773937 -0.22808995908787785 -0.67259573921988447 1</calibration_matrix>
+      <resolution>1920 1200</resolution>
+      <non_linear_parameters>
+        <fc1>2607.7318015000014</fc1>
+        <fc2>2607.7318015000014</fc2>
+        <cc1>975.7241809999992</cc1>
+        <cc2>570.1116690000006</cc2>
+        <k1>-0.328171</k1>
+        <k2>0.144806</k2>
+        <p1>0.000335</p1>
+        <p2>-0.002566</p2>
+        <alpha_c>0</alpha_c>
+      </non_linear_parameters>
+    </single_camera_calibration>
+    <single_camera_calibration>
+      <cam_id>Basler-40196689</cam_id>
+      <calibration_matrix>-486.96784534668768 1.8381092682135016 -1435.0448697264349 823.13189907399521; 264.55849882626353 1339.7913844205536 -318.46219759493238 574.36107135800933; 0.51011650018867394 0.021940148327358983 -0.55867733108893014 1</calibration_matrix>
+      <resolution>1920 1200</resolution>
+      <non_linear_parameters>
+        <fc1>1753.8249910000013</fc1>
+        <fc2>1753.8249910000013</fc2>
+        <cc1>966.0215750000002</cc1>
+        <cc2>597.5143060000007</cc2>
+        <k1>-0.350598</k1>
+        <k2>0.19734</k2>
+        <p1>-0.000701</p1>
+        <p2>-0.005206</p2>
+        <alpha_c>0</alpha_c>
+      </non_linear_parameters>
+    </single_camera_calibration>
+    <single_camera_calibration>
+      <cam_id>Basler-40196690</cam_id>
+      <calibration_matrix>1521.7160365008594 -1635.2662043314226 -1280.3863854937802 289.0174198726408; -1793.493828885232 -1050.1353323653059 -1291.0821497749007 1874.012264682289; 0.17649599849631578 0.28701970337806193 -0.98668809453698225 1</calibration_matrix>
+      <resolution>1920 1200</resolution>
+      <non_linear_parameters>
+        <fc1>2267.743272500001</fc1>
+        <fc2>2267.743272500001</fc2>
+        <cc1>977.4448360000017</cc1>
+        <cc2>603.3949930000011</cc2>
+        <k1>-0.344248</k1>
+        <k2>0.126058</k2>
+        <p1>-0.002259</p1>
+        <p2>-0.003077</p2>
+        <alpha_c>0</alpha_c>
+      </non_linear_parameters>
+    </single_camera_calibration>
+    <single_camera_calibration>
+      <cam_id>Basler-40196691</cam_id>
+      <calibration_matrix>136.38924564015781 2489.4213818167323 -404.51315039461673 785.03357109399542; 2443.6233213602304 36.267836473862317 -39.240139181170598 422.62212596937962; 0.16985782570391667 0.14076158528754715 -0.82423529950917152 1</calibration_matrix>
+      <resolution>1920 1200</resolution>
+      <non_linear_parameters>
+        <fc1>2796.3507919999997</fc1>
+        <fc2>2796.3507919999997</fc2>
+        <cc1>971.1088080000007</cc1>
+        <cc2>621.5639249999994</cc2>
+        <k1>-0.337016</k1>
+        <k2>0.317739</k2>
+        <p1>-0.000406</p1>
+        <p2>0.003423</p2>
+        <alpha_c>0</alpha_c>
+      </non_linear_parameters>
+    </single_camera_calibration>
+    <single_camera_calibration>
+      <cam_id>Basler-40196692</cam_id>
+      <calibration_matrix>-462.41054974970547 2444.8766139801405 -286.83331602154169 555.212193465106; 2282.6534709180023 556.00488407779505 -503.8379534191892 2114.9772088123768; -0.040645322321353601 0.20440996782284518 -0.84592932387673681 1</calibration_matrix>
+      <resolution>1920 1200</resolution>
+      <non_linear_parameters>
+        <fc1>2694.3378219999986</fc1>
+        <fc2>2694.3378219999986</fc2>
+        <cc1>1002.8467719999999</cc1>
+        <cc2>589.0201119999991</cc2>
+        <k1>-0.310448</k1>
+        <k2>0.02495</k2>
+        <p1>-0.000104</p1>
+        <p2>0.001301</p2>
+        <alpha_c>0</alpha_c>
+      </non_linear_parameters>
+    </single_camera_calibration>
+    <single_camera_calibration>
+      <cam_id>Basler-40196693</cam_id>
+      <calibration_matrix>96.745479653640444 -1949.2237794097484 -848.02562981261121 880.84722010210885; -1959.4807114526702 -101.65735501772845 -468.21004936616475 1394.4901248111544; -0.0081172229098140439 0.0056486395552148043 -0.84084980537210618 1</calibration_matrix>
+      <resolution>1920 1200</resolution>
+      <non_linear_parameters>
+        <fc1>2328.0593790000003</fc1>
+        <fc2>2328.0593790000003</fc2>
+        <cc1>991.7132569999997</cc1>
+        <cc2>578.4337360000005</cc2>
+        <k1>-0.328672</k1>
+        <k2>0.138757</k2>
+        <p1>-0.003584</p1>
+        <p2>-0.002865</p2>
+        <alpha_c>0</alpha_c>
+      </non_linear_parameters>
+    </single_camera_calibration>
+    <single_camera_calibration>
+      <cam_id>Basler-40196694</cam_id>
+      <calibration_matrix>-112.70928233222941 1877.0642434009267 -1241.6322714787682 1145.1908228600378; 1958.4706919040893 -251.35063004384199 -859.01809470866874 604.27610060852919; -0.16984770028580284 -0.1722209485356406 -0.7724114265909654 1</calibration_matrix>
+      <resolution>1920 1200</resolution>
+      <non_linear_parameters>
+        <fc1>2598.3378510000016</fc1>
+        <fc2>2598.3378510000016</fc2>
+        <cc1>999.6899440000001</cc1>
+        <cc2>571.1275649999997</cc2>
+        <k1>-0.357756</k1>
+        <k2>0.228579</k2>
+        <p1>-0.000091</p1>
+        <p2>0.001593</p2>
+        <alpha_c>0</alpha_c>
+      </non_linear_parameters>
+    </single_camera_calibration>
+    <single_camera_calibration>
+      <cam_id>Basler-40196695</cam_id>
+      <calibration_matrix>2053.085288234498 106.41279830003839 -542.09212001515516 1632.5358869482177; 187.87834887721499 -1995.5052126070307 -423.66690308087971 618.81598258080248; 0.096091227286282749 -0.033099045964164998 -0.82158676183124069 1</calibration_matrix>
+      <resolution>1920 1200</resolution>
+      <non_linear_parameters>
+        <fc1>2392.927754000001</fc1>
+        <fc2>2392.927754000001</fc2>
+        <cc1>932.5922049999999</cc1>
+        <cc2>630.6151099999998</cc2>
+        <k1>-0.313589</k1>
+        <k2>0.094536</k2>
+        <p1>-0.001796</p1>
+        <p2>-0.008566</p2>
+        <alpha_c>0</alpha_c>
+      </non_linear_parameters>
+    </single_camera_calibration>
+    <single_camera_calibration>
+      <cam_id>Basler-40196696</cam_id>
+      <calibration_matrix>-60.343234640451492 2203.7015479681736 -319.68179841575966 813.8785244885521; 1908.4849432598805 60.723768173267509 -979.08159159518607 -378.48397083962857; -0.18711334265247226 0.14031536635098774 -0.68497788870126042 1</calibration_matrix>
+      <resolution>1920 1200</resolution>
+      <non_linear_parameters>
+        <fc1>2900.2165285000005</fc1>
+        <fc2>2900.2165285000005</fc2>
+        <cc1>1029.7477150000002</cc1>
+        <cc2>614.7549060000001</cc2>
+        <k1>-0.321067</k1>
+        <k2>0.098477</k2>
+        <p1>-0.001217</p1>
+        <p2>0.002966</p2>
+        <alpha_c>0</alpha_c>
+      </non_linear_parameters>
+    </single_camera_calibration>
+    <single_camera_calibration>
+      <cam_id>Basler-40196697</cam_id>
+      <calibration_matrix>32.325731489008206 -1956.2335405482463 -654.75098438264661 936.32419087068138; -1429.8597641141625 289.10780449528687 -1384.5327586032126 113.13667174376477; 0.35219034324280629 -0.023852850348132369 -0.59673337149154448 1</calibration_matrix>
+      <resolution>1920 1200</resolution>
+      <non_linear_parameters>
+        <fc1>2825.509605500001</fc1>
+        <fc2>2825.509605500001</fc2>
+        <cc1>933.5561760000003</cc1>
+        <cc2>656.7912559999996</cc2>
+        <k1>-0.333568</k1>
+        <k2>0.119378</k2>
+        <p1>-0.004921</p1>
+        <p2>-0.002925</p2>
+        <alpha_c>0</alpha_c>
+      </non_linear_parameters>
+    </single_camera_calibration>
+    <single_camera_calibration>
+      <cam_id>Basler-40196698</cam_id>
+      <calibration_matrix>304.64084135532272 -34.001548570121905 -1781.9670874948902 1385.6816432026976; -408.03548460633078 -1665.8131789541862 -193.0760288451574 643.11586637387529; -0.61611879801304315 0.017350906216154854 -0.38067061651407635 1</calibration_matrix>
+      <resolution>1920 1200</resolution>
+      <non_linear_parameters>
+        <fc1>2314.659050000001</fc1>
+        <fc2>2314.659050000001</fc2>
+        <cc1>933.774684999999</cc1>
+        <cc2>563.9971329999998</cc2>
+        <k1>-0.328957</k1>
+        <k2>0.174916</k2>
+        <p1>-0.00364</p1>
+        <p2>-0.007839</p2>
+        <alpha_c>0</alpha_c>
+      </non_linear_parameters>
+    </single_camera_calibration>
+    <single_camera_calibration>
+      <cam_id>Basler-40196699</cam_id>
+      <calibration_matrix>61.977205791492857 1925.4561310428348 -1292.2141227195646 1113.7114188691808; 2199.5157070357932 9.8504267083832957 -193.97406845514121 584.35913053933962; 0.1092530529594726 -0.17492890282596765 -0.80556433377487446 1</calibration_matrix>
+      <resolution>1920 1200</resolution>
+      <non_linear_parameters>
+        <fc1>2593.259411</fc1>
+        <fc2>2593.259411</fc2>
+        <cc1>1028.120708000001</cc1>
+        <cc2>571.0141180000002</cc2>
+        <k1>-0.295788</k1>
+        <k2>-0.213297</k2>
+        <p1>-0.000842</p1>
+        <p2>-0.000566</p2>
+        <alpha_c>0</alpha_c>
+      </non_linear_parameters>
+    </single_camera_calibration>
+    <single_camera_calibration>
+      <cam_id>Basler-40196700</cam_id>
+      <calibration_matrix>175.3582690915722 -2288.0646791088047 -649.19340783561404 1318.3740187355875; -1254.1777252491768 219.70990542353999 -1892.7828601092694 1297.8449520891988; 0.58456398434281875 -0.1162177802138982 -0.66802833217593038 1</calibration_matrix>
+      <resolution>1920 1200</resolution>
+      <non_linear_parameters>
+        <fc1>2468.7247080000006</fc1>
+        <fc2>2468.7247080000006</fc2>
+        <cc1>1000.7711190000007</cc1>
+        <cc2>631.0189370000004</cc2>
+        <k1>-0.289891</k1>
+        <k2>0.050401</k2>
+        <p1>-0.020575</p1>
+        <p2>-0.002145</p2>
+        <alpha_c>0</alpha_c>
+      </non_linear_parameters>
+    </single_camera_calibration>
+    <single_camera_calibration>
+      <cam_id>Basler-40196701</cam_id>
+      <calibration_matrix>-597.69816601439891 2499.2988886090379 354.3703702303232 332.17584988694136; 2369.2031053096489 755.50749218224689 56.167729296185769 -545.42752284360586; 0.07890373641721804 0.46483446753991081 -0.78560629237202018 1</calibration_matrix>
+      <resolution>1920 1200</resolution>
+      <non_linear_parameters>
+        <fc1>2650.261292000001</fc1>
+        <fc2>2650.261292000001</fc2>
+        <cc1>996.1046190000002</cc1>
+        <cc2>588.4626600000008</cc2>
+        <k1>-0.318654</k1>
+        <k2>0.190908</k2>
+        <p1>0.000637</p1>
+        <p2>0.002366</p2>
+        <alpha_c>0</alpha_c>
+      </non_linear_parameters>
+    </single_camera_calibration>
+    <single_camera_calibration>
+      <cam_id>Basler-40196703</cam_id>
+      <calibration_matrix>1336.6800381820972 -110.92380055153535 -830.69693622402315 1041.6853258716253; -29.897366611743831 -1376.0835386455547 -455.88491743227979 603.08682719279489; 0.0076067578716623955 -0.076392417923175096 -0.83879337437840307 1</calibration_matrix>
+      <resolution>1920 1200</resolution>
+      <non_linear_parameters>
+        <fc1>1578.4505015000002</fc1>
+        <fc2>1578.4505015000002</fc2>
+        <cc1>1008.3959190000002</cc1>
+        <cc2>686.8360269999998</cc2>
+        <k1>-0.364165</k1>
+        <k2>0.168575</k2>
+        <p1>-0.015199</p1>
+        <p2>-0.004634</p2>
+        <alpha_c>0</alpha_c>
+      </non_linear_parameters>
+    </single_camera_calibration>
+    <single_camera_calibration>
+      <cam_id>Basler-40450770</cam_id>
+      <calibration_matrix>-39.191660482887045 3016.2467503566554 -584.822025890487 1344.5164490285449; 2205.4845144493233 -124.70701372515191 -1954.5645479923742 2405.8672860398374; -0.5323224252086427 0.2059170022969348 -0.98376877298602217 1</calibration_matrix>
+      <resolution>1920 1200</resolution>
+      <non_linear_parameters>
+        <fc1>2532.409595000001</fc1>
+        <fc2>2532.409595000001</fc2>
+        <cc1>941.0304500000004</cc1>
+        <cc2>559.0199380000005</cc2>
+        <k1>-0.324045</k1>
+        <k2>0.104765</k2>
+        <p1>-0.003683</p1>
+        <p2>0.000963</p2>
+        <alpha_c>0</alpha_c>
+      </non_linear_parameters>
+    </single_camera_calibration>
+    <single_camera_calibration>
+      <cam_id>Basler-40450771</cam_id>
+      <calibration_matrix>-1783.9926352619225 2608.7310242418248 -551.22166743079526 467.30971837507497; 1883.4473521443979 955.57315623012528 -2278.1411497809627 1703.355566197594; -0.56893587763961129 -0.21227105790251113 -0.73905456616385068 1</calibration_matrix>
+      <resolution>1920 1200</resolution>
+      <non_linear_parameters>
+        <fc1>3216.739034000001</fc1>
+        <fc2>3216.739034000001</fc2>
+        <cc1>949.3452739999996</cc1>
+        <cc2>447.31396199999904</cc2>
+        <k1>-0.302535</k1>
+        <k2>0.023344</k2>
+        <p1>-0.006266</p1>
+        <p2>-0.003013</p2>
+        <alpha_c>0</alpha_c>
+      </non_linear_parameters>
+    </single_camera_calibration>
+    <single_camera_calibration>
+      <cam_id>Basler-40450773</cam_id>
+      <calibration_matrix>-1186.8109843255813 1938.272904045851 -537.75864617403954 1018.5704992065178; 1524.0066385508057 630.68932210781065 -1557.363153092959 245.52221680791655; -0.37112969600456919 -0.14470596586434373 -0.59387352997348464 1</calibration_matrix>
+      <resolution>1920 1200</resolution>
+      <non_linear_parameters>
+        <fc1>3128.5970895</fc1>
+        <fc2>3128.5970895</fc2>
+        <cc1>937.3809309999999</cc1>
+        <cc2>524.105597</cc2>
+        <k1>-0.39417</k1>
+        <k2>0.60991</k2>
+        <p1>-0.00845</p1>
+        <p2>0.003079</p2>
+        <alpha_c>0</alpha_c>
+      </non_linear_parameters>
+    </single_camera_calibration>
+    <single_camera_calibration>
+      <cam_id>Basler-40450774</cam_id>
+      <calibration_matrix>89.081727719266127 1843.9924027026675 -1245.9670540700088 1197.918872011574; 2117.5295084972186 -156.21029688201568 -360.69493427581864 1803.2964150983537; 0.033606599482998718 -0.21209307555781717 -0.8068226371669317 1</calibration_matrix>
+      <resolution>1920 1200</resolution>
+      <non_linear_parameters>
+        <fc1>2516.452106</fc1>
+        <fc2>2516.452106</fc2>
+        <cc1>885.3703950000008</cc1>
+        <cc2>567.0990370000003</cc2>
+        <k1>-0.358594</k1>
+        <k2>0.253285</k2>
+        <p1>0.000588</p1>
+        <p2>0.001259</p2>
+        <alpha_c>0</alpha_c>
+      </non_linear_parameters>
+    </single_camera_calibration>
+    <single_camera_calibration>
+      <cam_id>Basler-40450776</cam_id>
+      <calibration_matrix>1383.1175218989708 -1609.5953580736414 -677.68833084277344 941.6409594845959; -1184.9813545226402 -559.46224476638668 -1706.9187938726777 1101.3987629598869; 0.47083983757529702 0.26726596514970286 -0.68769155849590391 1</calibration_matrix>
+      <resolution>1920 1200</resolution>
+      <non_linear_parameters>
+        <fc1>2382.099048000001</fc1>
+        <fc2>2382.099048000001</fc2>
+        <cc1>896.9198530000007</cc1>
+        <cc2>608.8082020000006</cc2>
+        <k1>-0.357</k1>
+        <k2>0.190623</k2>
+        <p1>0.000327</p1>
+        <p2>0.000097</p2>
+        <alpha_c>0</alpha_c>
+      </non_linear_parameters>
+    </single_camera_calibration>
+</multi_camera_reconstructor>

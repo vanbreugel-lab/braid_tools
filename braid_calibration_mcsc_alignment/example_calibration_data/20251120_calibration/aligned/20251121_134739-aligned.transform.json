@@ -1,0 +1,91 @@
+{
+  "created": "2026-07-06T14:28:57.925288-07:00",
+  "M": [
+    [
+      0.01662956159608716,
+      -0.04111439337055842,
+      0.6698496783023689,
+      0.024156335143880856
+    ],
+    [
+      0.4846635519839043,
+      0.46421526720298845,
+      0.016460688226725726,
+      -0.016060412169583434
+    ],
+    [
+      0.4642092483378174,
+      -0.48319697798757305,
+      -0.04118229479047528,
+      -0.6246147861999961
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "decomposition": {
+    "scale": 0.6713162646494528,
+    "det_sign": -1,
+    "rotvec_deg": [
+      -38.48474899339377,
+      87.34775044309359,
+      -34.16314646945594
+    ],
+    "translation": [
+      0.024156335143880856,
+      -0.016060412169583434,
+      -0.6246147861999961
+    ]
+  },
+  "reprojection_check_worst_px": 1.72564486647482e-11,
+  "unaligned_xml": "/home/lobula/ros2_ws/src/braid_tools/braid_calibration_mcsc_alignment/bigtunnel_calibration/20251120_calibration/unaligned/20251121_134739-unaligned.xml",
+  "braidz": "/home/lobula/ros2_ws/src/braid_tools/braid_calibration_mcsc_alignment/bigtunnel_calibration/20251120_calibration/aligned/20260706_120045.braidz",
+  "stimxml": "/home/lobula/ros2_ws/src/braid_tools/braid_calibration_mcsc_alignment/bigtunnel_calibration/bigwindtunnel_stim.xml",
+  "fit_metrics": {
+    "n_points": 10845,
+    "median_abs_dist_m": 0.004062229140040952,
+    "p90_abs_dist_m": 0.17638792401589304,
+    "inlier_frac_1cm": 0.6861226371599816,
+    "inlier_frac_2cm": 0.7755647763946519,
+    "trimmed_median_m": 0.002946698216530458,
+    "trimmed_frac": 0.810696173351775
+  },
+  "manual_adjustments": {
+    "scale": 1.0,
+    "rot_deg": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "trans": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "flips": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "coarse_rot": [
+      [
+        1.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        1.0
+      ]
+    ]
+  }
+}

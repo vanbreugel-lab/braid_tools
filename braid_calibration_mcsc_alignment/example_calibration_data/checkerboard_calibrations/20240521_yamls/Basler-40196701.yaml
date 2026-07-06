@@ -1,0 +1,55 @@
+camera_matrix:
+  cols: 3
+  data:
+  - 2647.32555
+  - 0.0
+  - 996.104619
+  - 0.0
+  - 2653.197034
+  - 588.46266
+  - 0.0
+  - 0.0
+  - 1.0
+  rows: 3
+camera_name: Basler-40196701
+distortion_coefficients:
+  cols: 5
+  data:
+  - -0.318654
+  - 0.190908
+  - 0.000637
+  - 0.002366
+  - 0.0
+  rows: 1
+distortion_model: plumb_bob
+image_height: 1200
+image_width: 1920
+projection_matrix:
+  cols: 4
+  data:
+  - 2534.352295
+  - 0.0
+  - 1001.589205
+  - 0.0
+  - 0.0
+  - 2607.413574
+  - 587.867096
+  - 0.0
+  - 0.0
+  - 0.0
+  - 1.0
+  - 0.0
+  rows: 3
+rectification_matrix:
+  cols: 3
+  data:
+  - 1.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 1.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 1.0
+  rows: 3
