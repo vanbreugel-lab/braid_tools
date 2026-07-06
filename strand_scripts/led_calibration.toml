@@ -1,0 +1,35 @@
+# Config for collect_led_calibration_data.py.
+# [[cameras]] and [cameras.point_detection_config] use braid's exact toml
+# format, so you can copy the point_detection_config table from a braid config.
+
+[[cameras]]
+name = "Basler-41942900"
+camera_settings_filename = "/home/lobula/src/wind_tunnel_resources/big_windtunnel_specifics/strand_aux_camera/camera_settings/basler-41942900-led-settings.pfs"   # optional pylon settings
+
+[cameras.point_detection_config]
+# keys not listed here keep strand-cam's current (persisted) value
+polarity = "DetectLight"           # LED on a darker background (DetectLight | DetectDark | DetectAbsDiff)
+diff_threshold = 200               # max 255 (u8); strand-cam rejects larger values
+n_sigma = 10.0
+max_num_points = 1                 # single LED
+alpha = 0.01
+bg_update_interval = 200
+feature_window_size = 30
+despeckle_threshold = 5
+clear_fraction = 0.3
+do_update_background_model = true
+use_cmp = true
+
+[calibration_data_collection]
+strand_cam_executable = "strand-cam"
+camera_backend = "pylon"             # pylon | vimba | webcam | sim
+http_server_addr = "127.0.0.1:3441"  # 3441 so it can coexist with the video saver
+trusted_network = "127.0.0.1/32"     # skips strand-cam token auth for local clients
+braid_url = "http://134.197.37.229:8397/"   # braid model server (its /events stream)
+output_base_dir = "~/Desktop/led_calibration_datasets"
+fps = 100.0                          # nominal triggerbox rate (fitted rate preferred at runtime)
+
+# merge tuning (defaults are usually fine):
+# match_tolerance_frames = 0.5       # nearest-time acceptance, in frame periods
+# max_offset_search_s = 10.0         # clock-offset search half-window around the prior
+# min_objid_rows = 5                 # drop spurious braid obj_ids shorter than this
