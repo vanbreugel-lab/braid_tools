@@ -27,6 +27,9 @@
   <exec_depend>python3-yaml</exec_depend>
   <exec_depend>python3-numpy</exec_depend>
   <!-- braid_emulator.py additionally requires pynumdiff (pip-only, see README) -->
+  <!-- braid_triggered_video_saver.py additionally requires the strand-braid deb
+       (provides the strand-cam and show-timestamps executables) -->
+
 
   <export>
     <build_type>ament_cmake</build_type>

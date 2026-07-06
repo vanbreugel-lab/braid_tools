@@ -10,6 +10,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/FlydraObject.msg
   msg/FlydraMainbrainPacket.msg
   msg/FlydraMainbrainSuperPacket.msg
+  msg/BraidTrigger.msg
   DEPENDENCIES geometry_msgs builtin_interfaces
 )
 
@@ -19,12 +20,14 @@ install(PROGRAMS
   nodes/braid_realtime_plotter.py
   nodes/braid_save_data_to_hdf5.py
   nodes/topic_relay_client.py
+  nodes/braid_triggered_video_saver.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
 install(DIRECTORY
   launch
   plot_config
+  video_config
   DESTINATION share/${PROJECT_NAME}
 )
 
