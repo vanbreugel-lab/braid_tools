@@ -1,0 +1,46 @@
+# Configuration for braid_triggered_video_saver.py.
+# Follows the braid/strand-cam toml conventions ([[cameras]] block), plus a
+# [triggered_video_saver] section for the node itself. Exactly one [[cameras]]
+# entry is supported.
+
+[[cameras]]
+name = "Basler-41942900"
+# pfs below enables external (triggerbox) triggering; exposure is LED-tuned --
+# consider a video-tuned .pfs copy for demo recordings
+camera_settings_filename = "/home/lobula/src/wind_tunnel_resources/big_windtunnel_specifics/strand_aux_camera/camera_settings/basler-41942900-led-settings.pfs"
+
+[triggered_video_saver]
+strand_cam_executable = "strand-cam"
+camera_backend = "pylon"             # pylon | vimba | webcam | sim
+http_server_addr = "127.0.0.1:3440"
+trusted_network = "127.0.0.1/32"     # skips strand-cam token auth for local clients
+braid_url = ""                       # e.g. "http://134.197.37.229:3333/" to sync with braid; "" = standalone
+output_base_dir = "~/Desktop/triggered_videos"
+fps = 100.0                          # nominal camera framerate, used to size the pre-trigger buffer
+pre_trigger_seconds = 1.0            # circular buffer saved from before the trigger
+post_trigger_seconds = 5.0           # recording continues this long after the trigger
+trigger_topic = "braid_trigger"
+run_show_timestamps = true           # write frame_timestamps.csv per event (needs show-timestamps)
+
+# --- mp4 encoding ---------------------------------------------------------
+# GPU encoding via the system ffmpeg's h264_nvenc: full-rate color video with
+# zero dropped frames (verified 2026-07-06 on strand-braid 1.0.0-rc.5: 105 fps
+# sustained for 60+ s at 1920x1200). Requires ffmpeg installed. The built-in
+# "H264Nvenc" codec still fails on Blackwell GPUs (strand-braid issue #29);
+# the rc.5 colorspace fix is what made this Ffmpeg path work with the color
+# (Bayer) camera. Encoder options can be added, e.g.:
+#   mp4_codec = { Ffmpeg = { codec = "h264_nvenc", post_codec_args = [["-b:v", "8M"]] } }
+# Fallback if ffmpeg/nvenc is unavailable: mp4_codec = "H264OpenH264" with
+# mp4_max_framerate = "Fps30" (software encoder ceiling at this resolution).
+mp4_codec = { Ffmpeg = { codec = "h264_nvenc" } }
+mp4_max_framerate = "Unlimited"      # Fps1..Fps100 | "Unlimited"
+# mp4_bitrate = "Bitrate5000"        # only applies to built-in codecs, not Ffmpeg
+
+# other optional passthroughs (sent verbatim as CamArg payloads):
+# recording_fps = "Fps100"           # limits recording framerate, e.g. Fps25 ... Fps100
+# pixel_format = "Mono8"             # forces camera pixel format; incompatible with
+#                                    # braid_url (set PixelFormat in the .pfs instead).
+#                                    # The { Ffmpeg = ... } codec needs Mono8/RGB8/YUV422 input,
+#                                    # and strand-cam <= rc.4 only knows the legacy pylon names
+#                                    # (RGB8packed/YUV422packed), which ace2 cameras reject --
+#                                    # so on ace2 color cameras use H264OpenH264 (demosaics Bayer).
