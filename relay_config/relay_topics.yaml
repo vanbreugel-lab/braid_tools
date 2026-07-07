@@ -3,6 +3,10 @@
 # is published, so only topic names are needed here.
 topics:
   - /flydra_mainbrain/super_packets
+  # volume-trigger events (Float64MultiArray) for the aux-camera video saver;
+  # see TRIGGERED_VIDEO_SYSTEM.md on the ros2 branch. Topic name must match
+  # the trigger node's config yaml. Harmless if the trigger node isn't running.
+  - /braid_trigger_topic
 
 # ROS 1 type -> ROS 2 type overrides. Only needed where the ROS 2 name is
 # not simply 'pkg/msg/Name' (the braid_tools messages were renamed to
