@@ -21,6 +21,7 @@ install(PROGRAMS
   nodes/braid_save_data_to_hdf5.py
   nodes/topic_relay_client.py
   nodes/braid_triggered_video_saver.py
+  nodes/braid_trigger_adapter.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -48,7 +48,7 @@ The save directory can be given either with the `data_directory` ROS parameter (
 
 ### braid_triggered_video_saver.py
 
-See [TRIGGERED_VIDEO_QUICKSTART.md](TRIGGERED_VIDEO_QUICKSTART.md) for a 5-minute hands-on test, and [NVENC_UPGRADE_TODO.md](NVENC_UPGRADE_TODO.md) for the pending GPU-encoding upgrade (strand-braid issue #29).
+See [TRIGGERED_VIDEO_QUICKSTART.md](TRIGGERED_VIDEO_QUICKSTART.md) for a 5-minute hands-on bench test, **[TRIGGERED_VIDEO_SYSTEM.md](TRIGGERED_VIDEO_SYSTEM.md) for operating the full two-machine production pipeline** (ROS 1 trigger node → relay → this camera), and [NVENC_UPGRADE_TODO.md](NVENC_UPGRADE_TODO.md) for GPU-encoding status.
 
 Saves a short video clip from a [strand-cam](https://github.com/strawlab/strand-braid) color camera whenever a trigger message arrives, together with the braid 3D tracking data for the triggered object. Requires the strand-braid `.deb` to be installed (provides the `strand-cam` and `show-timestamps` executables).
 
@@ -86,6 +86,10 @@ Notes:
 * Set `fps` in the toml to the camera's actual framerate — it sizes the pre-trigger buffer in frames. The node warns if the measured fps deviates by more than 20 %.
 * The shipped config uses GPU encoding via the system ffmpeg (`mp4_codec = { Ffmpeg = { codec = "h264_nvenc" } }`, requires ffmpeg installed): verified full-rate color with zero dropped frames (105 fps sustained, strand-braid ≥ 1.0.0-rc.5 — earlier versions can't feed Bayer color frames to ffmpeg). The built-in `H264Nvenc` codec still fails on Blackwell GPUs (strand-braid issue #29); the built-in `H264OpenH264` software encoder only sustains ~37 fps at 1920×1200 (cap `mp4_max_framerate = "Fps30"` if you must use it). See `NVENC_UPGRADE_TODO.md` for details and fallbacks.
 * To test without braid: run `ros2 run braid_tools braid_emulator.py` and publish a trigger for a live obj_id.
+
+### braid_trigger_adapter.py
+
+Converts the ROS 1 volume-trigger messages (relayed `std_msgs/Float64MultiArray` with `data = [flag, obj_id, framenumber, t_wall, stimulus...]`) into `braid_tools/BraidTrigger` on `braid_trigger` for the video saver, preserving the stimulus values in the trigger metadata. Part of the production pipeline (`ros2 launch braid_tools braid_triggered_video_pipeline.launch.py` starts listener + relay client + adapter + video saver together) — see [TRIGGERED_VIDEO_SYSTEM.md](TRIGGERED_VIDEO_SYSTEM.md).
 
 # Standalone strand-cam tools (`strand_scripts/`)
 
